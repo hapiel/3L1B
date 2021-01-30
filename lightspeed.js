@@ -1,5 +1,10 @@
 // game design by Bjorn van der haas
 
+gameInfo = {
+  title: "Lightspeed",
+  description: "Lightspeed, designed by Bjorn for arduino. <br> I ported my own arduino code to js.",
+}
+
 let ledDelay = 60;
 let decr = 2;
 let incr = 3;
@@ -68,7 +73,6 @@ function loop(){
     } else {
       timer = frameCount;
       blinkCounter ++;
-      console.log("test");
       if(blinkCounter > 3){
         play();
       }

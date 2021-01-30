@@ -1,3 +1,7 @@
+gameInfo = {
+  title: "Random hold",
+  description: "Just some demo code, <br> random light is on when holding button",
+}
 
 function loop(){
   

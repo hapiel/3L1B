@@ -1,3 +1,6 @@
+
+
+
 // variables to be used in game
 let lights = [false, false, false];
 let button = false;
@@ -71,24 +74,42 @@ function updateButton(){
 }
 
 
+
 // request the first frame
 window.requestAnimationFrame(masterLoop);
 
 // the loop controlling all critical aspects of the game
 function masterLoop(){
   updateButton();
-  loop();
+  // only run if loop exists
+  if (typeof loop === "function") {
+    loop();
+    // first frame
+    if(frameCount === 0){
+      document.getElementById("title").innerHTML = gameInfo.title;
+      document.getElementById("description").innerHTML = gameInfo.description;
+      const a = document.createElement("a");
+      a.href = s.src;
+      a.innerHTML = "link to game source";
+      document.getElementById("src").appendChild(a);
+    }
+    frameCount ++;
+  }
   updateLights();
-  frameCount ++;
+  
   // request the next frame. Should run around 60fps
   window.requestAnimationFrame(masterLoop);
 }
 
+// load js file depending on url parameter
+const urlParams = new URLSearchParams(window.location.search);
+const s = document.createElement("script");
+s.type = "text/javascript";
+s.src = urlParams.get("game") + ".js";
+document.getElementsByTagName("head")[0].appendChild(s);
 
+// dropdown menu
 document.getElementById("game-list").addEventListener("change", (e) =>{
-  const s = document.createElement("script");
-  s.type = "text/javascript";
-  s.src = e.target.value + ".js";
-  document.getElementsByTagName("head")[0].appendChild(s);
-
+  // change url parameter to select value
+  window.location.search = "?game=" + e.target.value;
 });

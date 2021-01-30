@@ -1,5 +1,8 @@
 
-
+gameInfo = {
+  title: "All hold",
+  description: "Just some demo code, <br> all lights are on when holding button",
+}
 function loop(){
   
   if(button){
