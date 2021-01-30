@@ -1,0 +1,26 @@
+body{
+  text-align: center;
+  margin-top: 5em;
+  background-color: #2f2fa7;
+}
+
+.light{
+  width: 100px;
+  height: 100px;
+  display: inline-block;
+  margin: 2em;
+  border: 4px solid rgb(0, 0, 0);
+}
+
+.on {
+  background-color: red;
+}
+
+.off {
+  background-color: rgb(46, 28, 28);
+}
+
+#button{
+  width: 100px;
+  height: 50px;
+}
