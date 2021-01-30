@@ -90,7 +90,7 @@ function masterLoop(){
       document.getElementById("description").innerHTML = gameInfo.description;
       const a = document.createElement("a");
       a.href = s.src;
-      a.innerHTML = "link to game source";
+      a.innerHTML = "source of this game";
       document.getElementById("src").appendChild(a);
     }
     frameCount ++;
