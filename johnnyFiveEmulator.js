@@ -15,11 +15,41 @@ class LedEmulator {
         }
     }
 
-    blink(millis) {
+    blink(millis = 100) {
+
+        // set millis to 100 when too low
+        if (millis < 1){
+            millis = 100;
+        }
+        
         this.intervalId = setInterval(() => {
             this.el.classList.toggle("on");
-        }, millis)
+        }, millis);
     }
+
+    on() {
+        this.el.classList.add("on");
+    }
+
+    off() {
+        this.el.classList.remove("on");
+    }
+
+    toggle(){
+        this.el.classList.toggle("on");
+    }
+
+    stop(){
+        clearInterval(this.intervalId);
+    }
+}
+
+class LedsEmulator{
+    // TODO: http://johnny-five.io/api/leds/
+}
+
+class ButtonEmulator{
+    // TODO: http://johnny-five.io/api/button/
 }
 
 function require(packageName) {
@@ -30,5 +60,7 @@ function require(packageName) {
     return {
         Board: BoardEmulator,
         Led: LedEmulator,
+        Leds: LedsEmulator,
+        Button: ButtonEmulator
     }
 }
