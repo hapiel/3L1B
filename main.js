@@ -3,7 +3,7 @@
 const urlParams = new URLSearchParams(window.location.search);
 const s = document.createElement("script");
 s.type = "text/javascript";
-s.src = "/games/" + urlParams.get("game") + ".js";
+s.src = "games/" + urlParams.get("game") + ".js";
 document.getElementsByTagName("head")[0].appendChild(s);
 
 // dropdown menu
