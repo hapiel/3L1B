@@ -2,6 +2,9 @@ class BoardEmulator {
     on(state, callback) {
         callback();
     }
+
+    // TODO: wait()
+    // TODO: loop()
 }
 
 class LedEmulator {
@@ -62,5 +65,5 @@ function require(packageName) {
         Led: LedEmulator,
         Leds: LedsEmulator,
         Button: ButtonEmulator
-    }
+    };
 }
