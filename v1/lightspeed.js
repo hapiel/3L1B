@@ -3,7 +3,7 @@
 gameInfo = {
   title: "Lightspeed",
   description: "Lightspeed, designed by Bjorn for arduino. <br> I ported my own arduino code to js.",
-}
+};
 
 let ledDelay = 60;
 let decr = 2;
