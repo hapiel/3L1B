@@ -1,7 +1,7 @@
 gameInfo = {
   title: "Click when all on",
   description: "press the button when all lights are on",
-}
+};
 
 const timers = [0,0,0];
 const minTime = 5;
