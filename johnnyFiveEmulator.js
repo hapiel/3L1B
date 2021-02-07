@@ -55,6 +55,16 @@ class ButtonEmulator{
     // TODO: http://johnny-five.io/api/button/
 }
 
+const FnEmulator = {
+    // TODO: https://github.com/rwaldron/johnny-five/blob/master/lib/fn.js
+    // http://johnny-five.io/api/fn/
+    // probably a bunch of functions can be copied out of the git
+    // I already did that with map()
+
+    map: (value, fromLow, fromHigh, toLow, toHigh) => ((value - fromLow) * (toHigh - toLow) / (fromHigh - fromLow) + toLow) | 0,
+
+};
+
 function require(packageName) {
     if(packageName != "johnny-five") {
         throw new Error("Only the johnny-five package is supported by this site");
@@ -64,6 +74,7 @@ function require(packageName) {
         Board: BoardEmulator,
         Led: LedEmulator,
         Leds: LedsEmulator,
-        Button: ButtonEmulator
+        Button: ButtonEmulator,
+        Fn: FnEmulator
     };
 }

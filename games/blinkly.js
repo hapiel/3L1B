@@ -1,4 +1,4 @@
-const { Board, Led } = require("johnny-five");
+const { Board, Led, Fn } = require("johnny-five");
 const board = new Board();
 
 // Initialisation outside of board so you can controll the led object from the console
@@ -17,5 +17,5 @@ board.on("ready", () => {
   // on-off phase periods
   led1.blink(100);
   led2.blink(100);
-  led3.blink(0);
+  // led3.blink(0);
 });
