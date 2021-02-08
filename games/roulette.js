@@ -26,7 +26,7 @@ board.on("ready", () => {
 
   // testing different adding styles
   leds = new Leds([led1, led2, led3]);
-  button = new Button({pin: 5, holdtime: 1000});
+  button = new Button({pin: 5, holdtime: 800});
 
   button.on("hold", () => {
     console.log("game start");
@@ -136,6 +136,7 @@ function blinkIncr(led,
     // check if we have reached the limit
     if(step > time) {
       if (callback){
+        gameState = "choice made";
         stayOn(500);
       }
       return;
