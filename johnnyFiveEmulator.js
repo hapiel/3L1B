@@ -49,6 +49,7 @@ class LedEmulator {
 
 class LedsEmulator{
     // TODO: http://johnny-five.io/api/leds/
+    // Daniel
 }
 
 class ButtonEmulator{
@@ -60,6 +61,7 @@ const FnEmulator = {
     // http://johnny-five.io/api/fn/
     // probably a bunch of functions can be copied out of the git
     // I already did that with map()
+    // DANIEL :D
 
     map: (value, fromLow, fromHigh, toLow, toHigh) => ((value - fromLow) * (toHigh - toLow) / (fromHigh - fromLow) + toLow) | 0,
 
