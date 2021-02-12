@@ -59,14 +59,45 @@ class LedsEmulator {
                 this.objectList.push(new Led(e));
             }
         });
-        
+
+        this.objectList.forEach((obj, n )=> {
+            this[n] = obj;
+        });
     }
-    
-    // TODO: http://johnny-five.io/api/leds/
-    // Daniel
+
+    blink(millis = 100) {
+        this.objectList.forEach( obj => {
+            obj.blink(millis);
+        });
+    }
+
+    on() {
+        this.objectList.forEach( obj => {
+            obj.on();
+        });
+    }
+
+    off() {
+        this.objectList.forEach( obj => {
+            obj.off();
+        });
+    }
+
+    toggle(){
+        this.objectList.forEach( obj => {
+            obj.toggle();
+        });
+    }
+
+    stop(){
+        this.objectList.forEach( obj => {
+            obj.stop();
+        });
+    }
+
+    // TODO: make iterable...
 }
 
-// LedsEmulator.prototype[Symbol.iterator] = LedsEmulator.objectList;
 
 class ButtonEmulator{
     // TODO: http://johnny-five.io/api/button/
@@ -75,11 +106,7 @@ class ButtonEmulator{
 const { ceil, max, min, PI } = Math;
 
 const FnEmulator = {
-    // TODO: https://github.com/rwaldron/johnny-five/blob/master/lib/fn.js
-    // http://johnny-five.io/api/fn/
-    // probably a bunch of functions can be copied out of the git
-    // I already did that with map()
-    // DANIEL :D
+    // based on https://github.com/rwaldron/johnny-five/blob/master/lib/fn.js
 
     map:    (value, fromLow, fromHigh, toLow, toHigh) => ((value - fromLow) * (toHigh - toLow) / (fromHigh - fromLow) + toLow) | 0,
     scale:  (value, fromLow, fromHigh, toLow, toHigh) => ((value - fromLow) * (toHigh - toLow) / (fromHigh - fromLow) + toLow) | 0,
