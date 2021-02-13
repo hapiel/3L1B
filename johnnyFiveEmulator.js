@@ -1,10 +1,28 @@
 class BoardEmulator {
-    on(state, callback) {
-        callback();
+    constructor() {
+        this.intervalId = false;
     }
 
-    // TODO: wait()
-    // TODO: loop()
+    on(state, callback) {
+        if(state == "ready") {
+            callback();
+        }
+    }
+
+    loop(millis, callback) {
+        this.intervalId = setInterval(() => {
+            callback(() => this.cancelLoop());
+        }, millis);
+    }
+
+    cancelLoop() {
+        clearInterval(this.intervalId);
+    }
+
+    //NOTE: jonny-five will improve it's temporal functionality sometime in the future
+    wait(millis, callback) {
+        setTimeout(callback, millis);
+    }
 }
 
 class LedEmulator {
@@ -100,7 +118,49 @@ class LedsEmulator {
 
 
 class ButtonEmulator{
-    // TODO: http://johnny-five.io/api/button/
+    constructor(init) {
+        //TODO: check what happens if no arguments are passed to a button in j5
+        this.id = FnEmulator.uid();
+        this.pin = init.pin || init;
+        this.holdtime = init.holdtime || 500;
+        this.downValue = 0;
+        this.upValue = 1;
+        this.el = document.querySelector("#button");
+        this.timeoutId = false;
+
+        if(init.invert || init.isPullup) {
+            this.downValue = 1;
+            this.upValue = 0;
+        }
+    }
+
+    on(state, callback) {
+        switch(state) {
+            case "down":
+            case "press":
+                this.el.addEventListener("mousedown", callback);
+                break;
+            case "up":
+            case "release":
+                this.el.addEventListener("mouseup", callback);
+                break;
+            case "hold":
+                this.el.addEventListener("mousedown", (e) => { this.holdDetection(callback) });
+                this.el.addEventListener("mouseup", () => { this.cancelHoldDetection() });
+                break;
+        }
+    }
+
+    holdDetection(callback) {
+        this.timeoutId = setTimeout(() => {
+            callback();
+            this.holdDetection(callback);
+        }, this.holdtime);
+    }
+
+    cancelHoldDetection() {
+        clearTimeout(this.timeoutId);
+    }
 }
 
 const { ceil, max, min, PI } = Math;
