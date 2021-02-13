@@ -26,7 +26,7 @@ let incr = 3;
 
 board.on("ready", function() {
   led1 = new Led(4);
-  led2 = new Led(3); 
+  led2 = new Led(3);
   led3 = new Led(2);
 
   // testing different adding styles

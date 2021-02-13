@@ -47,7 +47,6 @@ board.on("ready", () => {
       blinkIncr(selected, rollBall);
     }
   });
-
 });
 
 function startGame(){
@@ -156,9 +155,7 @@ function blinkIncr(led,
       leds[led].on();
       setTimeout(callback, duration);
     }
-
   }
-
 }
 
 function stopTimeouts(){

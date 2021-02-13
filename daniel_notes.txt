@@ -80,6 +80,10 @@ Gambling:
 Roulette
 Rock paper scissors
 
+Sports:
+Pong: when hit the ball early the ball goes fast, bigger win chance, and slower return.
+When hit the ball late, faster return.
+
 rhyhtm games
 
 Simon says
