@@ -20,8 +20,8 @@ let selected;
 let timeoutIds = [];
 
 board.on("ready", () => {
-  led1 = new Led(4);
-  led2 = new Led(3); 
+  led1 = new Led(0);
+  led2 = new Led(1); 
   led3 = new Led(2);
 
   // testing different adding styles
