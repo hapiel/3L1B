@@ -74,13 +74,15 @@ class LedsEmulator {
                 this.objectList.push(e);
             }
             if (typeof e == "number"){
-                this.objectList.push(new Led(e));
+                this.objectList.push(new LedEmulator(e));
             }
         });
 
         this.objectList.forEach((obj, n )=> {
             this[n] = obj;
         });
+
+        this.length = this.objectList.length;
     }
 
     blink(millis = 100) {
@@ -113,7 +115,7 @@ class LedsEmulator {
         });
     }
 
-    // TODO: make iterable...
+    [Symbol.iterator] = Array.prototype[Symbol.iterator];
 }
 
 
