@@ -11,8 +11,8 @@ let leds;
 board.on("ready", () => {
 
   // Create a standard led component instance
-  led1 = new Led(0);
-  led2 = new Led(1);
+  led1 = new Led(4);
+  led2 = new Led(3);
   led3 = new Led(2);
 
   leds = new Leds([led1,1,led3]);
@@ -21,5 +21,6 @@ board.on("ready", () => {
   // on-off phase periods
   led1.blink(100);
   led2.blink(100);
+  led3.blink(100);
   // led3.blink(0);
 });

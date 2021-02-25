@@ -5,7 +5,8 @@ class BoardEmulator {
 
     on(state, callback) {
         if(state == "ready") {
-            callback();
+            const boundCb = callback.bind(this);
+            boundCb();
         }
     }
 

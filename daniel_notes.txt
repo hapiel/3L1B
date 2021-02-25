@@ -93,3 +93,13 @@ morse chatbot
 binary calculator
 
 
+--- 
+Arduino?
+Not as quick feedback as with J5
+I find it harder, probably because I'm less used to it?
+VScode is much nicer than arduino IDE
+Code concepts don't translate well from one to the other
+What would be easier for beginning programmers? And what would be more attractive?
+Should I add a bunch of libraries, such as for easier button (debounce, hold), led blinking, etc...
+
+
