@@ -1,0 +1,66 @@
+body{
+  background-color: #ffffff;
+  color: #000000;
+  margin: 0;
+}
+
+.full {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  border: 2px solid red;
+  box-sizing: border-box;
+  padding: 1em;
+}
+
+.left-bar {
+  border: 2px solid red;
+  box-sizing: border-box;
+  height: auto;
+  width: 18em;
+}
+
+.game {
+  border: 2px solid red;
+  box-sizing: border-box;
+  /* margin: auto; */
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.right-menu {
+  border: 2px solid red;
+  box-sizing: border-box;
+  margin-left: auto;
+  align-self: flex-start;
+}
+
+.source {
+  border: 2px solid red;
+  box-sizing: border-box;
+  align-self: center;
+}
+
+.light{
+  width: 100px;
+  height: 100px;
+  display: inline-block;
+  margin: 2em;
+  border: 4px solid rgb(0, 0, 0);
+}
+
+.on {
+  background-color: red;
+}
+
+.off {
+  background-color: rgb(46, 28, 28);
+}
+
+#button{
+  width: 100px;
+  height: 50px;
+}
+
