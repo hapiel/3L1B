@@ -1,7 +1,7 @@
 // game design by Bjorn van der haas
 
 const { Board, Led, Leds, Button } = require("johnny-five");
-const board = new Board();
+const board = new Board({port: "COM6"});
 
 
 let led1;
