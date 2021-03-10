@@ -1,0 +1,32 @@
+{
+  "name": "source",
+  "version": "1.0.0",
+  "main": "main.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "parcel v3/index.htm",
+    "build": "parcel v3/index.htm"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hapiel/3lights_js.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hapiel/3lights_js/issues"
+  },
+  "homepage": "https://github.com/hapiel/3lights_js#readme",
+  "description": "",
+  "dependencies": {
+    "avr8js": "^0.15.0",
+    "highlight.js": "^10.6.0"
+  },
+  "devDependencies": {
+    "parcel-bundler": "1.12.3"
+  }
+}
