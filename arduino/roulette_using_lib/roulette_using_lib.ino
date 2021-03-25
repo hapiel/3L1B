@@ -1,13 +1,11 @@
 #include <TLOB.h>
 
-TLOB TLOB(4,3,2,5);
+TLOB TLOB(2,3,4,5);
 
 String gameState = "finished";
 
 unsigned long holdTimer;
 unsigned long ledTimer;
-unsigned long ledTimer2;
-unsigned long ledTimer3;
 int blinkOnDuration;
 int blinkOffDuration;
 int selected;
@@ -24,7 +22,6 @@ void setup() {
 }
 
 void loop() {
-  TLOB.updateButton();
 
   if (gameState == "finished"){
     // button is held 800ms
@@ -44,10 +41,8 @@ void loop() {
 
     //select next
     if (TLOB.buttonPressed){
-      selected = (selected + 1) % 3;
-      TLOB.leds[0] = 0;
-      TLOB.leds[1] = 0;
-      TLOB.leds[2] = 0;
+      selected = TLOB.next(selected);
+      TLOB.allOff();
       TLOB.leds[selected] = 1;
       blinkOnDuration = 400;
       blinkOffDuration = 100;
@@ -86,20 +81,16 @@ void loop() {
   }
 
   if (gameState == "rolling"){
-    TLOB.leds[0] = 0;
-    TLOB.leds[1] = 0;
-    TLOB.leds[2] = 0;
+    TLOB.allOff();
     if (ledTimer < millis() - ballSpd){
       // ball too slow, end game
       if (ballSpd > ballStopSpd){
         gameState = "result";
         ledTimer = millis();
-        ledTimer2 = millis();
-        ledTimer3 = millis();
       } else {
         // increase speed and go to next
         ledTimer = millis();
-        ballPos = (ballPos + 1) % 3;
+        ballPos = TLOB.next(ballPos);
         ballSpd *= 1.1;
       }
     }
@@ -110,32 +101,24 @@ void loop() {
   if (gameState == "result"){
     if (selected == ballPos){
       //WIN! :D
-      if (ledTimer < millis() - 20){
-        TLOB.leds[ballPos] = !TLOB.leds[ballPos];
-        ledTimer = millis();
-      }
+      TLOB.blink(ballPos, 20);
       
     } else {
       //LOOSE :(
-      if (ledTimer < millis() - 20){
-        TLOB.leds[ballPos] = !TLOB.leds[ballPos];
-        ledTimer = millis();
-      }
-      if (ledTimer2 < millis() - 200){
-        TLOB.leds[selected] = !TLOB.leds[selected];
-        ledTimer2 = millis();
-      }
+      TLOB.blink(ballPos, 20);
+      TLOB.blink(selected, 200);
     }
-    if (ledTimer3 < millis() - 3000){
-      gameState = "finished";
-      TLOB.leds[0] = 0;
-      TLOB.leds[1] = 0;
-      TLOB.leds[2] = 0;
-    }
+    gameState = "resultDone";
+  }
+  if (gameState == "resultDone"){
+    if (ledTimer < millis() - 3000){
+        gameState = "finished";
+        TLOB.allStop();
+        TLOB.allOff();
+      }
   }
 
-  TLOB.updateLeds();
-
+  TLOB.update();
 }
 
 
