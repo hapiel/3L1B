@@ -52,23 +52,41 @@ h2 {
   
   font-family: 'Fredoka One', cursive;
   font-size: 1.4rem;
-  /* border: 2px solid red;
-  box-sizing: border-box; */
 }
 
 .left-bar {
   grid-area: left;
-  /* border: 2px solid red;
-  box-sizing: border-box; */
-  height: auto;
+  display: flex;
   max-width: 22rem;
-  
+  flex-direction: column;
+  overflow-y: auto;
 }
+
+.game-info{
+  overflow-y: hidden;
+  min-height: 40%;
+  margin-right: 16px;
+  scrollbar-width: thin;
+}
+.game-info:hover {
+  overflow-y: auto;
+  margin-right: 0;
+}
+
+.game-selection {
+  overflow-y: hidden;
+  padding-right: 1em;
+  scrollbar-width: thin;
+  margin-right: 16px;
+}
+.game-selection:hover{
+  overflow-y: auto;
+  margin-right: 0;
+}
+
 
 .right-menu {
   grid-area: menu;
-  /* border: 2px solid red;
-  box-sizing: border-box; */
   margin-left: auto;
   align-self: start;
   font-family: 'Fredoka One', cursive;
@@ -96,6 +114,9 @@ pre {
   margin: auto;
 }
 
+.hidden{
+  visibility: hidden;
+}
 
 .footer {
   grid-area: footer;
