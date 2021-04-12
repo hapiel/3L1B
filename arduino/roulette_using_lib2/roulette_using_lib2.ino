@@ -113,7 +113,7 @@ void loop() {
   if (gameState == "resultDone"){
     if (ledTimer < millis() - 3000){
         gameState = "finished";
-        TLOB.allStop();
+        TLOB.stopAll();
         TLOB.allOff();
       }
   }
