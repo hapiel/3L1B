@@ -4,6 +4,16 @@
 
 
 
+a{
+  color: inherit;
+  text-decoration: none;
+}
+
+  a:hover{
+    text-decoration: underline;
+    text-decoration-color: #16c6d3;
+  }
+
 code {
   font-family: 'Inconsolata', monospace;
 
@@ -27,9 +37,9 @@ h1, h2, h3 {
   font-weight: normal;
 }
 
-h2 {
-  font-size: 1.2rem;
-}
+  h2 {
+    font-size: 1.2rem;
+  }
 
 .full {
   width: 100%;
@@ -68,10 +78,10 @@ h2 {
   margin-right: 16px;
   scrollbar-width: thin;
 }
-.game-info:hover {
-  overflow-y: auto;
-  margin-right: 0;
-}
+  .game-info:hover {
+    overflow-y: auto;
+    margin-right: 0;
+  }
 
 .game-selection {
   overflow-y: hidden;
@@ -79,10 +89,10 @@ h2 {
   scrollbar-width: thin;
   margin-right: 16px;
 }
-.game-selection:hover{
-  overflow-y: auto;
-  margin-right: 0;
-}
+  .game-selection:hover{
+    overflow-y: auto;
+    margin-right: 0;
+  }
 
 
 .right-menu {
@@ -167,9 +177,7 @@ pre {
     inset 0 -2px 12px 2px #881915;
 }
 
-.on2 {
-  background-color: #F41414;
-}
+
 
 .off {
   background-color: var(--black);
