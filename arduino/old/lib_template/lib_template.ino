@@ -1,6 +1,6 @@
 #include <TLOB.h>
 
-TLOB TLOB(2,3,4,5);
+TLOB tlob(2,3,4,5);
 
 void setup() {
 
@@ -8,11 +8,11 @@ void setup() {
 
 void loop() {
   
-  if (TLOB.buttonDown){
-    TLOB.allOn();
+  if (tlob.buttonDown){
+    tlob.allOn();
   } else {
-    TLOB.allOff();
+    tlob.allOff();
   }
 
-  TLOB.update();
+  tlob.update();
 }

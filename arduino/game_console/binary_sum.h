@@ -27,6 +27,7 @@ class BinarySum {
   }
 
   void loop() {
+
     
     if (millis() - timeElapsed > ledDelay && gameState == "on"){
       ansState ++;

@@ -3,12 +3,14 @@
 #include "roulette.h"
 #include "all_on_simple.h"
 #include "binary_sum.h"
+#include "race.h"
 
 
 Lightspeed game01;
 Roulette game02;
 AllOn game03;
 BinarySum game04;
+Race game05;
 
 
 int game;
@@ -48,11 +50,11 @@ void setup() {
     game04.setup();
     game = 4;
   }
-  // // 0 0 1
-  // if (!s1 && !s2 && s3){
-  //   game05.setup();
-  //   game = 5;
-  // }
+  // 0 0 1
+  if (!s1 && !s2 && s3){
+    game05.setup();
+    game = 5;
+  }
 
   // // 1 0 1
   // if (s1 && !s2 && s3){
@@ -87,9 +89,9 @@ void loop() {
   if (game == 4){
     game04.loop();
   }
-  // if (game == 5){
-  //   game05.loop();
-  // }
+  if (game == 5){
+    game05.loop();
+  }
   // if (game == 6){
   //   game06.loop();
   // }
