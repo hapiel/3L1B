@@ -10,7 +10,7 @@ void setup() {
 }
 
 void loop() {
-  if (TLOB.buttonPressed){
+  if (TLOB.buttonPressed()){
     TLOB.blinkOff[0] -= 30;
     TLOB.blinkOff[1] -= 30;
     TLOB.blinkOff[2] -= 30;

@@ -22,7 +22,7 @@ void setup() {
 void loop() {
 
   // turn on current led position
-  tlob.allOff();
+  tlob.ledAll(0);
 
   if (position > 0 && position < 4){
     tlob.led(position - 1, 1);

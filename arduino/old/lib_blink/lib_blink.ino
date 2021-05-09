@@ -10,17 +10,17 @@ void setup() {
 }
 
 void loop() {
-  if (TLOB.buttonPressed){
+  if (TLOB.buttonPressed()){
     TLOB.stop(0);
     TLOB.stop(2);
   }
 
-  if (TLOB.buttonHold > 300 && TLOB.buttonHold < 999){
+  if (TLOB.buttonHold() > 300 && TLOB.buttonHold() < 999){
     TLOB.allStop();
-    TLOB.allOff();
+    TLOB.ledAll(0);
   }
 
-  if (TLOB.buttonHold > 1200){
+  if (TLOB.buttonHold() > 1200){
     TLOB.blink(0, 500);
     TLOB.blink(1, 100, 400);
     TLOB.blink(2, 400, 100);

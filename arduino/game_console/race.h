@@ -25,7 +25,7 @@ class Race {
   void loop() {
 
     if (gameState == "countdown"){
-      tlob.allOff();
+      tlob.ledAll(0);
       delay(700);
       tlob.led(2, 1);
       delay(700);
@@ -33,7 +33,7 @@ class Race {
       delay(700);
       tlob.led(0,1);
       delay(700);
-      tlob.allOff();
+      tlob.ledAll(0);
       timer = millis();
       gameState = "race";
     }
@@ -41,7 +41,7 @@ class Race {
 
 
     if (gameState == "race"){
-      if (tlob.buttonPressed){
+      if (tlob.buttonPressed()){
         presses ++;
         // blink faster and faster, switching to the next led after 20 presses
 
@@ -88,7 +88,7 @@ class Race {
     }
 
     if (gameState == "results"){
-      if (tlob.buttonHold > 800){
+      if (tlob.buttonHold() > 800){
         // reset game
         gameState = "countdown";
         presses = 0;
@@ -119,7 +119,7 @@ class Race {
 
   void scoreDisplay(int time, int points){
     if (score < time){
-      tlob.allOff();
+      tlob.ledAll(0);
       delay(200);
       binaryDisplay(points);
       delay(500);

@@ -25,12 +25,12 @@ void loop() {
 
   if (gameState == "finished"){
     // button is held 800ms
-    if (tlob.buttonReleased){
+    if (tlob.buttonReleased()){
       gameState = "selection";
       selected = 2;
       ledTimer = millis();
-      tlob.allOff();
-      tlob.leds[2] = 1;
+      tlob.ledAll(0);
+      tlob.led(2, 1);
       // blinkOnDuration = 400;
       // blinkOffDuration = 100;
     }
@@ -39,21 +39,21 @@ void loop() {
   if (gameState == "selection"){
 
     //select next
-    if (tlob.buttonReleased){
+    if (tlob.buttonReleased()){
       selected = tlob.next(selected);
-      tlob.allOff();
+      tlob.ledAll(0);
       tlob.stopAll();
-      tlob.leds[selected] = 1;
+      tlob.led(selected, 1);
       tlob.blink(selected, 400, 100);
       // blinkOnDuration = 400;
       // blinkOffDuration = 100;
     }
 
-    if (tlob.buttonHold > 700){
+    if (tlob.buttonHold() > 700){
       gameState = "selected";
       ledTimer = millis();
       tlob.stopAll();
-      tlob.allOff();
+      tlob.ledAll(0);
       tlob.blink(selected, 30, 50);
     }
 
@@ -70,7 +70,7 @@ void loop() {
   }
 
   if (gameState == "rolling"){
-    tlob.allOff();
+    tlob.ledAll(0);
     if (ledTimer < millis() - ballSpd){
       // ball too slow, end game
       if (ballSpd > ballStopSpd){
@@ -83,7 +83,7 @@ void loop() {
         ballSpd *= 1.1;
       }
     }
-    tlob.leds[ballPos] = 1;
+    tlob.leds(ballPos, 1);
       
   }
 
@@ -103,7 +103,7 @@ void loop() {
     if (ledTimer < millis() - 3000){
         gameState = "finished";
         tlob.stopAll();
-        tlob.allOff();
+        tlob.ledAll(0);
       }
   }
 

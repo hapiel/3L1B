@@ -54,7 +54,7 @@ class Lightspeed {
 
   void checkButton(){
     // if the button is pressed
-    if ( tlob.buttonPressed ) {
+    if ( tlob.buttonPressed() ) {
       if ( position == 1 ) {
         // win! 
         // increase speed
@@ -86,7 +86,7 @@ class Lightspeed {
       // stop all blinking
       tlob.stopAll();
       // turn off lights in case they were on after blinking
-      tlob.allOff();
+      tlob.ledAll(0);
       // change back to playing mode
       gameState = "playing";
     }

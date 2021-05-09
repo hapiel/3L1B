@@ -9,8 +9,8 @@ int buttonPin = 5;
 
 String gameState = "finished";
 
-bool buttonDown;
-bool buttonPressed;
+bool buttonDown();
+bool buttonPressed();
 unsigned long holdTimer;
 unsigned long ledTimer;
 unsigned long ledTimer2;
@@ -33,19 +33,19 @@ void updateLeds(){
 void updateButton(){
     // check button pressing or holding or nothing etc. No debounce yet.
   
-  if (!buttonDown) {
+  if (!buttonDown()) {
     if (digitalRead(buttonPin)) {
-      buttonPressed = true;
+      buttonPressed() = true;
       holdTimer = millis();
     } else {
-      buttonPressed = false;
+      buttonPressed() = false;
       holdTimer = millis();
     }
   } else {
-    buttonPressed = false;
+    buttonPressed() = false;
   }
 
-  buttonDown = digitalRead (buttonPin);
+  buttonDown() = digitalRead (buttonPin);
 }
 
 void setup() {
@@ -64,11 +64,11 @@ void setup() {
 void loop() {
   updateButton();
 
-  Serial.println(buttonPressed);
+  Serial.println(buttonPressed());
 
   if (gameState == "finished"){
     // button is held 800ms
-    if (buttonDown && holdTimer < millis() - 800){
+    if (buttonDown() && holdTimer < millis() - 800){
       gameState = "selection";
       selected = 0;
       ledTimer = millis();
@@ -83,7 +83,7 @@ void loop() {
   if (gameState == "selection"){
 
     //select next
-    if (buttonPressed){
+    if (buttonPressed()){
       selected = (selected + 1) % 3;
       leds[0] = 0;
       leds[1] = 0;

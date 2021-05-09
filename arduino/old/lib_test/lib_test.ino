@@ -10,14 +10,14 @@ void setup() {
 
 void loop() {
   
-  if (TLOB.buttonPressed){
+  if (TLOB.buttonPressed()){
     led = TLOB.prev(led);
   }
 
-  if (TLOB.buttonDown){
-    TLOB.leds[led] = true;
+  if (TLOB.buttonDown()){
+    TLOB.led(led, true);
   } else {
-    TLOB.allOff();
+    TLOB.ledAll(0);
   }
 
   TLOB.update();

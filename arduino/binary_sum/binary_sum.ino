@@ -30,13 +30,14 @@ void loop() {
     ansState ++;
     ansState %= 3;
     timeElapsed = millis();
+    binaryDisplay(answers[ansState]);
   }
-  binaryDisplay(answers[ansState]);
+  
 
-  if (tlob.buttonPressed && gameState == "on") {
+  if (tlob.buttonPressed() && gameState == "on") {
     //correct answer
     if (ansState == 0){
-      tlob.allOff();
+      tlob.ledAll(0);
       for (int i = 0; i < 10; i++){
         tlob.blink(0,100);
         tlob.updateLeds();
@@ -58,7 +59,7 @@ void loop() {
 
   if (gameState == "waiting" && timeElapsed < millis() - 2000){
     tlob.stopAll();
-    tlob.allOff();
+    tlob.ledAll(0);
     gameState = "on";
     delay(1000);
     gameInit();
@@ -87,16 +88,16 @@ void gameInit(){
   //display math problem
   binaryDisplay(num1);
   delay(1600);
-  tlob.allOff();
+  tlob.ledAll(0);
   delay(400);
   binaryDisplay(num2);
   delay(1600);
-  tlob.allOff();
+  tlob.ledAll(0);
   delay(2000);
 }
 
 void binaryDisplay(int num){
-  tlob.allOff();
+  tlob.ledAll(0);
   int binary[] = {0,0,0};
   int numCopy = num;
 
@@ -108,8 +109,7 @@ void binaryDisplay(int num){
     i++;
   }
 
-  tlob.leds[2] = binary[0];
-  tlob.leds[1] = binary[1];
-  tlob.leds[0] = binary[2];
-  tlob.updateLeds();
+  tlob.led(2, binary[0]);
+  tlob.led(1, binary[1]);
+  tlob.led(0, binary[2]);
 }

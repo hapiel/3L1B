@@ -13,10 +13,10 @@ void loop() {
   
   // When the game is won, lights are 
   if (gameState == "win"){
-    if (tlob.buttonPressed){
+    if (tlob.buttonPressed()){
       gameState = "play";
       tlob.stopAll();
-      tlob.allOff();
+      tlob.ledAll(0);
     }
   }
 
@@ -24,7 +24,7 @@ void loop() {
   if (gameState == "play"){
 
     // when the button is pressed
-    if (tlob.buttonPressed){
+    if (tlob.buttonPressed()){
       // if all leds are on
       if (tlob.led(0) && tlob.led(1) && tlob.led(2)){
         // blink all leds
@@ -32,7 +32,7 @@ void loop() {
         gameState = "win";
       } else {
         //loose
-        tlob.allOff();
+        tlob.ledAll(0);
         delay(500);
       }
     } else {

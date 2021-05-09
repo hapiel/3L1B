@@ -25,13 +25,13 @@ void loop() {
 
   if (gameState == "finished"){
     // button is held 800ms
-    if (TLOB.buttonHold > 800){
+    if (TLOB.buttonHold() > 800){
       gameState = "selection";
       selected = 0;
       ledTimer = millis();
-      TLOB.leds[0] = 1;
-      TLOB.leds[1] = 0;
-      TLOB.leds[2] = 0;
+      TLOB.led(0, 1);
+      TLOB.led(1, 0);
+      TLOB.led(2, 0);
       blinkOnDuration = 400;
       blinkOffDuration = 100;
     }
@@ -40,25 +40,25 @@ void loop() {
   if (gameState == "selection"){
 
     //select next
-    if (TLOB.buttonPressed){
+    if (TLOB.buttonPressed()){
       selected = TLOB.next(selected);
-      TLOB.allOff();
-      TLOB.leds[selected] = 1;
+      TLOB.ledAll(0);
+      TLOB.led(selected, 1);
       blinkOnDuration = 400;
       blinkOffDuration = 100;
     }
 
     // blink increasing speed
-    if (TLOB.leds[selected]){
+    if (TLOB.led(selected)){
       if (ledTimer < millis() - blinkOnDuration){
-        TLOB.leds[selected] = 0;
+        TLOB.led(selected, 0);
         ledTimer = millis();
         blinkOnDuration *= 0.85;
       }
     }
-    if (!TLOB.leds[selected]){
+    if (!TLOB.led(selected)){
       if (ledTimer < millis() - blinkOffDuration){
-        TLOB.leds[selected] = 1;
+        TLOB.led(selected, 1);
         ledTimer = millis();
         blinkOffDuration *= 0.95;
       }
@@ -66,7 +66,7 @@ void loop() {
     if (blinkOnDuration < 40){
       gameState = "selected";
       ledTimer = millis();
-      TLOB.leds[selected] = 1;
+      TLOB.led(selected, 1);
     }
 
   }
@@ -81,7 +81,7 @@ void loop() {
   }
 
   if (gameState == "rolling"){
-    TLOB.allOff();
+    TLOB.ledAll(0);
     if (ledTimer < millis() - ballSpd){
       // ball too slow, end game
       if (ballSpd > ballStopSpd){
@@ -94,7 +94,7 @@ void loop() {
         ballSpd *= 1.1;
       }
     }
-    TLOB.leds[ballPos] = 1;
+    TLOB.led(ballPos, 1);
       
   }
 
@@ -114,7 +114,7 @@ void loop() {
     if (ledTimer < millis() - 3000){
         gameState = "finished";
         TLOB.allStop();
-        TLOB.allOff();
+        TLOB.ledAll(0);
       }
   }
 

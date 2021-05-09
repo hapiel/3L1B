@@ -52,7 +52,7 @@ void nextLed(){
 
 void checkButton(){
   // if the button is pressed
-  if ( TLOB.buttonPressed ) {
+  if ( TLOB.buttonPressed() ) {
     if ( position == 1 ) {
       // win! 
       // increase speed
@@ -84,7 +84,7 @@ void waitToPlay(){
     // stop all blinking
     TLOB.stopAll();
     // turn off lights in case they were on after blinking
-    TLOB.allOff();
+    TLOB.ledAll(0);
     // change back to playing mode
     gameState = "playing";
   }

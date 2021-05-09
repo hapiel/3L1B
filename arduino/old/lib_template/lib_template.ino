@@ -8,10 +8,10 @@ void setup() {
 
 void loop() {
   
-  if (tlob.buttonDown){
-    tlob.allOn();
+  if (tlob.buttonDown()){
+    tlob.ledAll(true);
   } else {
-    tlob.allOff();
+    tlob.ledAll(false);
   }
 
   tlob.update();
