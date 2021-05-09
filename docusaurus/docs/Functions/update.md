@@ -1,5 +1,7 @@
 #update()
 
+`update()`
+
 This function calls [updateButton()](updateButton) and [updateLeds()](updateLeds)
 
 It is recommended to call this function at the end of every loop.

@@ -2,8 +2,8 @@
 module.exports = {
   title: '3L1B documentation',
   tagline: 'The most minimalist game console',
-  url: 'https://your-docusaurus-test-site.com',
-  baseUrl: '/',
+  url: 'https://hapiel.github.io/3L1B/',
+  baseUrl: '/docs/',
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
   favicon: 'img/favicon.ico',
