@@ -10,6 +10,7 @@ module.exports = {
   organizationName: '3L1B', // Usually your GitHub org/user name.
   projectName: '3L1B', // Usually your repo name.
   themeConfig: {
+    sidebarCollapsible: false,
     navbar: {
       title: '3L1B documentation',
       logo: {

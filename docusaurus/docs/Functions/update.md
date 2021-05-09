@@ -10,9 +10,11 @@ Example:
 void loop() {
   
   if (tlob.buttonDown){
-    tlob.allOn();
+     // turn all leds on
+    tlob.ledAll(HIGH);
   } else {
-    tlob.allOff();
+    // turn all leds off
+    tlob.ledAll(LOW);
   }
 
   tlob.update();
