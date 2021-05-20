@@ -1,5 +1,7 @@
-// show and hide source
+// init emulator
+const emulator = new Emulator('#light-0'); 
 
+// show and hide source
 let showSource = false;
 
 document.querySelectorAll(".source-link").forEach(item => {
@@ -21,7 +23,6 @@ document.querySelectorAll(".source-link").forEach(item => {
 });
 
 // load game info
-
 const titleEl = document.getElementById("title");
 const authorEl = document.getElementById("author");
 const instructionsEl = document.getElementById("instructions");
@@ -47,23 +48,34 @@ fetch('games.json')
       const a = document.createElement("a");
       a.setAttribute("href", "#");
       a.setAttribute("onclick", "changeGame(" + i + ")");
-      console.log(i);
       const title = document.createTextNode(game.title);
       a.appendChild(title);
 
       li.appendChild(a);
       gameSelectionEl.append(li);
-      
+  
     });
   });
 
 // change the game
 function changeGame(id){
-  titleEl.innerHTML = gameData.games[id].title;
-  authorEl.innerHTML = gameData.games[id].author;
-  instructionsEl.innerHTML = gameData.games[id].instructions;
-  sourceEl.innerHTML = gameData.games[id].source;
+  const game = gameData.games[id];
+  titleEl.innerHTML = game.title;
+  authorEl.innerHTML = game.author;
+  instructionsEl.innerHTML = game.instructions;
+  sourceEl.innerHTML = game.source;
 
   // turn on code highlight
   hljs.highlightAll();
+
+  if(game.path) {
+    executeGame(game);
+  }
+}
+
+async function executeGame(game) {
+  const res = await fetch(`games/${game.path.hex}`); 
+  const hex = await res.text();
+  emulator.loadGame(hex); 
+  emulator.executeGame(); 
 }
