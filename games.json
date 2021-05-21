@@ -14,7 +14,7 @@
         },
         {
             "title": "Blink",
-            "author": "Unkown",
+            "author": "Imani Dap",
             "instructions": "Enjoy the blinking led! This is a classical test to see if a piece of hardware is working correctly.",
             "source": "//TODO: Add blink c source code.",
             "path": {

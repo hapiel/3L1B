@@ -1,5 +1,41 @@
 // init emulator
-const emulator = new Emulator('#light-0'); 
+let emulator 
+
+window.addEventListener('DOMContentLoaded', () => {
+  const leds = [
+    {
+      pin: 3,
+      avrPort: 'portD',
+      avrPin: 3,
+      domElement: document.querySelector('#light-0'),
+      state: false,
+    },
+    {
+      pin: 2,
+      avrPort: 'portD',
+      avrPin: 2,
+      domElement: document.querySelector('#light-1'),
+      state: false,
+    },
+    {
+      pin: 4,
+      avrPort: 'portD',
+      avrPin: 4,
+      domElement: document.querySelector('#light-2'),
+      state: false,
+    }
+  ];
+
+  const button = {
+    pin: 5,
+    avrPort: 'portD',
+    avrPin: 5,
+    domElement: document.querySelector('#button'),
+    state: false,
+  }
+
+  emulator = new Emulator(leds, button); 
+})
 
 // show and hide source
 let showSource = false;
@@ -67,6 +103,9 @@ function changeGame(id){
 
   // turn on code highlight
   hljs.highlightAll();
+
+  //stop running old game
+  emulator.stopGame();
 
   if(game.path) {
     executeGame(game);

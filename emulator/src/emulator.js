@@ -2,24 +2,20 @@ import * as avr8js from 'avr8js';
 import { loadHex } from './intelhex';
 
 class Emulator {
-    constructor(ledSelector) {
+    constructor(leds, button) {
         this.frameId;
         this.cpu;
         this.timer0;
+        this.portA;
         this.portB;
+        this.portC;
+        this.portD;
 
         this.program = new Uint16Array();
         this.clockFrequency = 16000000;
         this.flashSize = 32768;
-
-        this.leds = [
-            {
-                pin: 13,
-                avrPin: 5,
-                domElement: document.querySelector(ledSelector),
-                state: false,
-            }
-        ]
+        this.leds = leds;
+        this.button = button;
     }
 
     loadGame(hex) {
@@ -29,22 +25,51 @@ class Emulator {
         this.cpu = new avr8js.CPU(this.program);
 
         this.timer0 = new avr8js.AVRTimer(this.cpu, avr8js.timer0Config);
+        this.initPorts();
+    }
+
+    initPorts() {
+        this.portA = new avr8js.AVRIOPort(this.cpu, avr8js.portAConfig);
         this.portB = new avr8js.AVRIOPort(this.cpu, avr8js.portBConfig);
+        this.portC = new avr8js.AVRIOPort(this.cpu, avr8js.portCConfig);
+        this.portD = new avr8js.AVRIOPort(this.cpu, avr8js.portDConfig);
+
+        //TODO: figure out how to configure an input
+
+        this.portA.addListener(() => {
+            this.ledHandler('portA');
+        });
 
         this.portB.addListener(() => {
-            for(let led of this.leds) {
-                led.state = this.portB.pinState(led.avrPin) === avr8js.PinState.High;
+            this.ledHandler('portB');
+        });
 
-                if(led.state) {
-                    led.domElement.classList.remove('off');
-                    led.domElement.classList.add('on');
-                    continue;
-                }
+        this.portC.addListener(() => {
+            this.ledHandler('portC');
+        });
 
-                led.domElement.classList.remove('on');
-                led.domElement.classList.add('off');
+        this.portD.addListener(() => {
+            this.ledHandler('portD');
+        });
+    }
+
+    ledHandler(port) {
+        const connectedLeds = this.leds.filter((led) => {
+            return led.avrPort == port;
+        });
+
+        for(let led of connectedLeds) {
+            if(this[port].pinState(led.avrPin) === avr8js.PinState.High) {
+                led.domElement.classList.remove('off');
+                led.domElement.classList.add('on');
+                led.state = true;
+                continue;
             }
-        })
+
+            led.domElement.classList.remove('on');
+            led.domElement.classList.add('off');
+            led.state = false;
+        }
     }
 
     executeGame() {
@@ -55,6 +80,17 @@ class Emulator {
         }
 
         this.frameId = requestAnimationFrame(() => this.executeGame());
+    }
+
+    stopGame() {
+        cancelAnimationFrame(this.frameId);
+        for(let led of this.leds) {
+            if(led.state) {
+                led.domElement.classList.remove('on');
+                led.domElement.classList.add('off');
+                led.state = false;
+            }
+        }
     }
 }
 
