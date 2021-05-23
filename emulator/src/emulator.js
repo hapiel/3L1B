@@ -15,7 +15,7 @@ class Emulator {
         this.clockFrequency = 16000000;
         this.flashSize = 32768;
         this.leds = leds;
-        this.button = button; //NOTE: the button is connected with a pull-up resistor
+        this.button = button;
     }
 
     loadGame(hex) {
@@ -56,11 +56,12 @@ class Emulator {
     }
 
     buttonPressHandler() {
-        this[this.button.avrPort].setPin(this.button.avrPin, avr8js.PinState.Low);
+        this[this.button.avrPort].setPin(this.button.avrPin, avr8js.PinState.High);
     }
 
     buttonReleaseHandler() {
-        this[this.button.avrPort].setPin(this.button.avrPin, avr8js.PinState.High);
+        //TODO: switch guard
+        this[this.button.avrPort].setPin(this.button.avrPin, avr8js.PinState.Low);
     }
 
     ledHandler(port) {
