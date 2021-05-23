@@ -15,7 +15,7 @@ class Emulator {
         this.clockFrequency = 16000000;
         this.flashSize = 32768;
         this.leds = leds;
-        this.button = button;
+        this.button = button; //NOTE: the button is connected with a pull-up resistor
     }
 
     loadGame(hex) {
@@ -34,7 +34,9 @@ class Emulator {
         this.portC = new avr8js.AVRIOPort(this.cpu, avr8js.portCConfig);
         this.portD = new avr8js.AVRIOPort(this.cpu, avr8js.portDConfig);
 
-        //TODO: figure out how to configure an input
+        this.button.domElement.addEventListener('mousedown', () => this.buttonPressHandler());
+        this.button.domElement.addEventListener('mouseup', () => this.buttonReleaseHandler());
+        this.button.domElement.addEventListener('mouseleave', () => this.buttonReleaseHandler());
 
         this.portA.addListener(() => {
             this.ledHandler('portA');
@@ -51,6 +53,14 @@ class Emulator {
         this.portD.addListener(() => {
             this.ledHandler('portD');
         });
+    }
+
+    buttonPressHandler() {
+        this[this.button.avrPort].setPin(this.button.avrPin, avr8js.PinState.Low);
+    }
+
+    buttonReleaseHandler() {
+        this[this.button.avrPort].setPin(this.button.avrPin, avr8js.PinState.High);
     }
 
     ledHandler(port) {
