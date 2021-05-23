@@ -8,7 +8,7 @@ unsigned long time = 0;
 void setup() {
   Serial.begin(9600);
 
-  randomSeed(analogRead(0));
+  // randomSeed(analogRead(0));
   Serial.println("Randomseed set, game begins");
 }
 

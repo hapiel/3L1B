@@ -6,7 +6,8 @@ String gameState = "play";
 unsigned long time = 0;
 
 void setup() {
-  randomSeed(analogRead(0));
+  //randomSeed(analogRead(0));
+  analogRead(0);
 }
 
 void loop() {
