@@ -10,6 +10,7 @@ class Emulator {
         this.portB;
         this.portC;
         this.portD;
+        this.cache;
 
         this.program = new Uint16Array();
         this.clockFrequency = 16000000;
@@ -25,7 +26,10 @@ class Emulator {
         this.cpu = new avr8js.CPU(this.program);
 
         this.timer0 = new avr8js.AVRTimer(this.cpu, avr8js.timer0Config);
+        this.usart = new avr8js.AVRUSART(this.cpu, avr8js.usart0Config, this.clockFrequency);
+
         this.initPorts();
+        this.initSerialCommunication();
     }
 
     initPorts() {
@@ -54,6 +58,20 @@ class Emulator {
         this.portD.addListener(() => {
             this.ledHandler('portD');
         });
+    }
+
+    initSerialCommunication() {
+        this.cache = ''; 
+        this.usart.onByteTransmit = (rawvalue) => {
+            const value = String.fromCharCode(rawvalue);
+            if(value == '\n') {
+                console.log(this.cache);
+                this.cache = '';
+                return;
+            }
+
+            this.cache += value;
+        };
     }
 
     buttonPressHandler() {
