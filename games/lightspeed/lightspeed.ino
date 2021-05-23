@@ -1,6 +1,6 @@
 #include <TLOB.h>
 
-TLOB TLOB(3,2,4,6);
+TLOB TLOB(3,2,4,5);
 
 // current position of the light
 int position = 0;
