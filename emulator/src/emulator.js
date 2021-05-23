@@ -34,6 +34,7 @@ class Emulator {
         this.portC = new avr8js.AVRIOPort(this.cpu, avr8js.portCConfig);
         this.portD = new avr8js.AVRIOPort(this.cpu, avr8js.portDConfig);
 
+        this.button.state = avr8js.PinState.Low;
         this.button.domElement.addEventListener('mousedown', () => this.buttonPressHandler());
         this.button.domElement.addEventListener('mouseup', () => this.buttonReleaseHandler());
         this.button.domElement.addEventListener('mouseleave', () => this.buttonReleaseHandler());
@@ -57,11 +58,14 @@ class Emulator {
 
     buttonPressHandler() {
         this[this.button.avrPort].setPin(this.button.avrPin, avr8js.PinState.High);
+        this.button.state = avr8js.PinState.High;
     }
 
     buttonReleaseHandler() {
-        //TODO: switch guard
-        this[this.button.avrPort].setPin(this.button.avrPin, avr8js.PinState.Low);
+        if(this[this.button.avrPort].pinState(this.button.avrPin) != avr8js.PinState.Low) {
+            this[this.button.avrPort].setPin(this.button.avrPin, avr8js.PinState.Low);
+            this.button.state = avr8js.PinState.Low;
+        }
     }
 
     ledHandler(port) {
