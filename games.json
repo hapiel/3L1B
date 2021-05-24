@@ -29,6 +29,16 @@
                 "ino": "blink/blink.ino",
                 "hex": "blink/blink.hex"
             }
+        },
+        {
+            "title": "Binary Sum",
+            "author": "Daniel Simu",
+            "instructions": "Game design by Maarten",
+            "source": "//TODO: Add source code.",
+            "path": {
+                "ino": "binary_sum/binary_sum.ino",
+                "hex": "binary_sum/binary_sum.hex"
+            }
         }
     ]
 }
