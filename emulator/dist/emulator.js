@@ -1,28 +1,3559 @@
-parcelRequire=function(e,r,t,n){var i,o="function"==typeof parcelRequire&&parcelRequire,u="function"==typeof require&&require;function f(t,n){if(!r[t]){if(!e[t]){var i="function"==typeof parcelRequire&&parcelRequire;if(!n&&i)return i(t,!0);if(o)return o(t,!0);if(u&&"string"==typeof t)return u(t);var c=new Error("Cannot find module '"+t+"'");throw c.code="MODULE_NOT_FOUND",c}p.resolve=function(r){return e[t][1][r]||r},p.cache={};var l=r[t]=new f.Module(t);e[t][0].call(l.exports,p,l,l.exports,this)}return r[t].exports;function p(e){return f(p.resolve(e))}}f.isParcelRequire=!0,f.Module=function(e){this.id=e,this.bundle=f,this.exports={}},f.modules=e,f.cache=r,f.parent=o,f.register=function(r,t){e[r]=[function(e,r){r.exports=t},{}]};for(var c=0;c<t.length;c++)try{f(t[c])}catch(e){i||(i=e)}if(t.length){var l=f(t[t.length-1]);"object"==typeof exports&&"undefined"!=typeof module?module.exports=l:"function"==typeof define&&define.amd?define(function(){return l}):n&&(this[n]=l)}if(parcelRequire=f,i)throw i;return f}({"DZzW":[function(require,module,exports) {
-"use strict";function t(t,e){const a=t.dataView.getUint16(93,!0);t.data[a]=255&t.pc,t.data[a-1]=t.pc>>8&255,t.pc22Bits&&(t.data[a-2]=t.pc>>16&255),t.dataView.setUint16(93,a-(t.pc22Bits?3:2),!0),t.data[95]&=127,t.cycles+=2,t.pc=e}Object.defineProperty(exports,"__esModule",{value:!0}),exports.avrInterrupt=t;
-},{}],"F3UQ":[function(require,module,exports) {
-"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.CPU=void 0;var t=require("./interrupt");const e=256;class s{constructor(t,s=8192){this.progMem=t,this.sramBytes=s,this.data=new Uint8Array(this.sramBytes+e),this.data16=new Uint16Array(this.data.buffer),this.dataView=new DataView(this.data.buffer),this.progBytes=new Uint8Array(this.progMem.buffer),this.readHooks=[],this.writeHooks=[],this.pendingInterrupts=[],this.clockEvents=[],this.pc22Bits=this.progBytes.length>131072,this.gpioTimerHooks=[],this.pc=0,this.cycles=0,this.nextInterrupt=-1,this.nextClockEvent=0,this.reset()}reset(){this.data.fill(0),this.SP=this.data.length-1,this.pendingInterrupts.splice(0,this.pendingInterrupts.length),this.nextInterrupt=-1}readData(t){return t>=32&&this.readHooks[t]?this.readHooks[t](t):this.data[t]}writeData(t,e){const s=this.writeHooks[t];s&&s(e,this.data[t],t)||(this.data[t]=e)}get SP(){return this.dataView.getUint16(93,!0)}set SP(t){this.dataView.setUint16(93,t,!0)}get SREG(){return this.data[95]}get interruptsEnabled(){return!!(128&this.SREG)}updateNextInterrupt(){this.nextInterrupt=this.pendingInterrupts.findIndex(t=>!!t)}setInterruptFlag(t){const{flagRegister:e,flagMask:s,enableRegister:i,enableMask:r}=t;t.inverseFlag?this.data[e]&=~s:this.data[e]|=s,this.data[i]&r&&this.queueInterrupt(t)}updateInterruptEnable(t,e){const{enableMask:s,flagRegister:i,flagMask:r}=t;e&s?this.data[i]&r&&this.queueInterrupt(t):this.clearInterrupt(t,!1)}queueInterrupt(t){this.pendingInterrupts[t.address]=t,this.updateNextInterrupt()}clearInterrupt({address:t,flagRegister:e,flagMask:s},i=!0){delete this.pendingInterrupts[t],i&&(this.data[e]&=~s),this.updateNextInterrupt()}clearInterruptByFlag(t,e){const{flagRegister:s,flagMask:i}=t;e&i&&(this.data[s]&=~i,this.clearInterrupt(t))}addClockEvent(t,e){const s={cycles:this.cycles+Math.max(1,e),callback:t},{clockEvents:i}=this;if(!i.length||i[i.length-1].cycles<=s.cycles)i.push(s);else if(i[0].cycles>=s.cycles)i.unshift(s);else for(let r=1;r<i.length;r++)if(i[r].cycles>=s.cycles){i.splice(r,0,s);break}return this.nextClockEvent=this.clockEvents[0].cycles,t}updateClockEvent(t,e){return!!this.clearClockEvent(t)&&(this.addClockEvent(t,e),!0)}clearClockEvent(t){var e,s;const i=this.clockEvents.findIndex(e=>e.callback===t);return i>=0&&(this.clockEvents.splice(i,1),this.nextClockEvent=null!==(s=null===(e=this.clockEvents[0])||void 0===e?void 0:e.cycles)&&void 0!==s?s:0,!0)}tick(){var e,s,i;const{nextClockEvent:r,clockEvents:n}=this;r&&r<=this.cycles&&(null===(e=n.shift())||void 0===e||e.callback(),this.nextClockEvent=null!==(i=null===(s=n[0])||void 0===s?void 0:s.cycles)&&void 0!==i?i:0);const{nextInterrupt:a}=this;if(this.interruptsEnabled&&a>=0){const e=this.pendingInterrupts[a];(0,t.avrInterrupt)(this,e.address),e.constant||this.clearInterrupt(e)}}}exports.CPU=s;
-},{"./interrupt":"DZzW"}],"cvTP":[function(require,module,exports) {
-"use strict";function a(a){return 36864==(65039&a)||37376==(65039&a)||37902==(65038&a)||37900==(65038&a)}function t(t){const e=t.progMem[t.pc];if(7168==(64512&e)){const a=t.data[(496&e)>>4],d=t.data[15&e|(512&e)>>5],i=a+d+(1&t.data[95]),s=255&i;t.data[(496&e)>>4]=s;let c=192&t.data[95];c|=s?0:2,c|=128&s?4:0,c|=(s^d)&(a^s)&128?8:0,c|=c>>2&1^c>>3&1?16:0,c|=256&i?1:0,c|=1&(a&d|d&~s|~s&a)?32:0,t.data[95]=c}else if(3072==(64512&e)){const a=t.data[(496&e)>>4],d=t.data[15&e|(512&e)>>5],i=a+d&255;t.data[(496&e)>>4]=i;let s=192&t.data[95];s|=i?0:2,s|=128&i?4:0,s|=(i^d)&(i^a)&128?8:0,s|=s>>2&1^s>>3&1?16:0,s|=a+d&256?1:0,s|=1&(a&d|d&~i|~i&a)?32:0,t.data[95]=s}else if(38400==(65280&e)){const a=2*((48&e)>>4)+24,d=t.dataView.getUint16(a,!0),i=d+(15&e|(192&e)>>2)&65535;t.dataView.setUint16(a,i,!0);let s=224&t.data[95];s|=i?0:2,s|=32768&i?4:0,s|=~d&i&32768?8:0,s|=s>>2&1^s>>3&1?16:0,s|=~i&d&32768?1:0,t.data[95]=s,t.cycles++}else if(8192==(64512&e)){const a=t.data[(496&e)>>4]&t.data[15&e|(512&e)>>5];t.data[(496&e)>>4]=a;let d=225&t.data[95];d|=a?0:2,d|=128&a?4:0,d|=d>>2&1^d>>3&1?16:0,t.data[95]=d}else if(28672==(61440&e)){const a=t.data[16+((240&e)>>4)]&(15&e|(3840&e)>>4);t.data[16+((240&e)>>4)]=a;let d=225&t.data[95];d|=a?0:2,d|=128&a?4:0,d|=d>>2&1^d>>3&1?16:0,t.data[95]=d}else if(37893==(65039&e)){const a=t.data[(496&e)>>4],d=a>>>1|128&a;t.data[(496&e)>>4]=d;let i=224&t.data[95];i|=d?0:2,i|=128&d?4:0,i|=1&a,i|=i>>2&1^1&i?8:0,i|=i>>2&1^i>>3&1?16:0,t.data[95]=i}else if(38024==(65423&e))t.data[95]&=~(1<<((112&e)>>4));else if(63488==(65032&e)){const a=7&e,d=(496&e)>>4;t.data[d]=~(1<<a)&t.data[d]|(t.data[95]>>6&1)<<a}else if(62464==(64512&e))t.data[95]&1<<(7&e)||(t.pc=t.pc+(((504&e)>>3)-(512&e?64:0)),t.cycles++);else if(61440==(64512&e))t.data[95]&1<<(7&e)&&(t.pc=t.pc+(((504&e)>>3)-(512&e?64:0)),t.cycles++);else if(37896==(65423&e))t.data[95]|=1<<((112&e)>>4);else if(64e3==(65032&e)){const a=t.data[(496&e)>>4],d=7&e;t.data[95]=191&t.data[95]|(a>>d&1?64:0)}else if(37902==(65038&e)){const a=t.progMem[t.pc+1]|(1&e)<<16|(496&e)<<13,d=t.pc+2,i=t.dataView.getUint16(93,!0),{pc22Bits:s}=t;t.data[i]=255&d,t.data[i-1]=d>>8&255,s&&(t.data[i-2]=d>>16&255),t.dataView.setUint16(93,i-(s?3:2),!0),t.pc=a-1,t.cycles+=s?4:3}else if(38912==(65280&e)){const a=248&e,d=7&e,i=t.readData(32+(a>>3));t.writeData(32+(a>>3),i&~(1<<d))}else if(37888==(65039&e)){const a=(496&e)>>4,d=255-t.data[a];t.data[a]=d;let i=225&t.data[95]|1;i|=d?0:2,i|=128&d?4:0,i|=i>>2&1^i>>3&1?16:0,t.data[95]=i}else if(5120==(64512&e)){const a=t.data[(496&e)>>4],d=t.data[15&e|(512&e)>>5],i=a-d;let s=192&t.data[95];s|=i?0:2,s|=128&i?4:0,s|=0!=((a^d)&(a^i)&128)?8:0,s|=s>>2&1^s>>3&1?16:0,s|=d>a?1:0,s|=1&(~a&d|d&i|i&~a)?32:0,t.data[95]=s}else if(1024==(64512&e)){const a=t.data[(496&e)>>4],d=t.data[15&e|(512&e)>>5];let i=t.data[95];const s=a-d-(1&i);i=192&i|(!s&&i>>1&1?2:0)|(d+(1&i)>a?1:0),i|=128&s?4:0,i|=(a^d)&(a^s)&128?8:0,i|=i>>2&1^i>>3&1?16:0,i|=1&(~a&d|d&s|s&~a)?32:0,t.data[95]=i}else if(12288==(61440&e)){const a=t.data[16+((240&e)>>4)],d=15&e|(3840&e)>>4,i=a-d;let s=192&t.data[95];s|=i?0:2,s|=128&i?4:0,s|=(a^d)&(a^i)&128?8:0,s|=s>>2&1^s>>3&1?16:0,s|=d>a?1:0,s|=1&(~a&d|d&i|i&~a)?32:0,t.data[95]=s}else if(4096==(64512&e)){if(t.data[(496&e)>>4]===t.data[15&e|(512&e)>>5]){const e=a(t.progMem[t.pc+1])?2:1;t.pc+=e,t.cycles+=e}}else if(37898==(65039&e)){const a=t.data[(496&e)>>4],d=a-1;t.data[(496&e)>>4]=d;let i=225&t.data[95];i|=d?0:2,i|=128&d?4:0,i|=128===a?8:0,i|=i>>2&1^i>>3&1?16:0,t.data[95]=i}else if(38169===e){const a=t.pc+1,e=t.dataView.getUint16(93,!0),d=t.data[92];t.data[e]=255&a,t.data[e-1]=a>>8&255,t.data[e-2]=a>>16&255,t.dataView.setUint16(93,e-3,!0),t.pc=(d<<16|t.dataView.getUint16(30,!0))-1,t.cycles+=3}else if(37913===e){const a=t.data[92];t.pc=(a<<16|t.dataView.getUint16(30,!0))-1,t.cycles++}else if(38360===e){const a=t.data[91];t.data[0]=t.progBytes[a<<16|t.dataView.getUint16(30,!0)],t.cycles+=2}else if(36870==(65039&e)){const a=t.data[91];t.data[(496&e)>>4]=t.progBytes[a<<16|t.dataView.getUint16(30,!0)],t.cycles+=2}else if(36871==(65039&e)){const a=t.data[91],d=t.dataView.getUint16(30,!0);t.data[(496&e)>>4]=t.progBytes[a<<16|d],t.dataView.setUint16(30,d+1,!0),65535===d&&(t.data[91]=(a+1)%(t.progBytes.length>>16)),t.cycles+=2}else if(9216==(64512&e)){const a=t.data[(496&e)>>4]^t.data[15&e|(512&e)>>5];t.data[(496&e)>>4]=a;let d=225&t.data[95];d|=a?0:2,d|=128&a?4:0,d|=d>>2&1^d>>3&1?16:0,t.data[95]=d}else if(776==(65416&e)){const a=t.data[16+((112&e)>>4)],d=t.data[16+(7&e)],i=a*d<<1;t.dataView.setUint16(0,i,!0),t.data[95]=252&t.data[95]|(65535&i?0:2)|(a*d&32768?1:0),t.cycles++}else if(896==(65416&e)){const a=t.dataView.getInt8(16+((112&e)>>4)),d=t.dataView.getInt8(16+(7&e)),i=a*d<<1;t.dataView.setInt16(0,i,!0),t.data[95]=252&t.data[95]|(65535&i?0:2)|(a*d&32768?1:0),t.cycles++}else if(904==(65416&e)){const a=t.dataView.getInt8(16+((112&e)>>4)),d=t.data[16+(7&e)],i=a*d<<1;t.dataView.setInt16(0,i,!0),t.data[95]=252&t.data[95]|(65535&i?2:0)|(a*d&32768?1:0),t.cycles++}else if(38153===e){const a=t.pc+1,e=t.dataView.getUint16(93,!0),{pc22Bits:d}=t;t.data[e]=255&a,t.data[e-1]=a>>8&255,d&&(t.data[e-2]=a>>16&255),t.dataView.setUint16(93,e-(d?3:2),!0),t.pc=t.dataView.getUint16(30,!0)-1,t.cycles+=d?3:2}else if(37897===e)t.pc=t.dataView.getUint16(30,!0)-1,t.cycles++;else if(45056==(63488&e)){const a=t.readData(32+(15&e|(1536&e)>>5));t.data[(496&e)>>4]=a}else if(37891==(65039&e)){const a=t.data[(496&e)>>4],d=a+1&255;t.data[(496&e)>>4]=d;let i=225&t.data[95];i|=d?0:2,i|=128&d?4:0,i|=127===a?8:0,i|=i>>2&1^i>>3&1?16:0,t.data[95]=i}else if(37900==(65038&e))t.pc=(t.progMem[t.pc+1]|(1&e)<<16|(496&e)<<13)-1,t.cycles+=2;else if(37382==(65039&e)){const a=(496&e)>>4,d=t.data[a],i=t.readData(t.dataView.getUint16(30,!0));t.writeData(t.dataView.getUint16(30,!0),i&255-d),t.data[a]=i}else if(37381==(65039&e)){const a=(496&e)>>4,d=t.data[a],i=t.readData(t.dataView.getUint16(30,!0));t.writeData(t.dataView.getUint16(30,!0),i|d),t.data[a]=i}else if(37383==(65039&e)){const a=t.data[(496&e)>>4],d=t.readData(t.dataView.getUint16(30,!0));t.writeData(t.dataView.getUint16(30,!0),a^d),t.data[(496&e)>>4]=d}else if(57344==(61440&e))t.data[16+((240&e)>>4)]=15&e|(3840&e)>>4;else if(36864==(65039&e)){t.cycles++;const a=t.readData(t.progMem[t.pc+1]);t.data[(496&e)>>4]=a,t.pc++}else if(36876==(65039&e))t.cycles++,t.data[(496&e)>>4]=t.readData(t.dataView.getUint16(26,!0));else if(36877==(65039&e)){const a=t.dataView.getUint16(26,!0);t.cycles++,t.data[(496&e)>>4]=t.readData(a),t.dataView.setUint16(26,a+1,!0)}else if(36878==(65039&e)){const a=t.dataView.getUint16(26,!0)-1;t.dataView.setUint16(26,a,!0),t.cycles++,t.data[(496&e)>>4]=t.readData(a)}else if(32776==(65039&e))t.cycles++,t.data[(496&e)>>4]=t.readData(t.dataView.getUint16(28,!0));else if(36873==(65039&e)){const a=t.dataView.getUint16(28,!0);t.cycles++,t.data[(496&e)>>4]=t.readData(a),t.dataView.setUint16(28,a+1,!0)}else if(36874==(65039&e)){const a=t.dataView.getUint16(28,!0)-1;t.dataView.setUint16(28,a,!0),t.cycles++,t.data[(496&e)>>4]=t.readData(a)}else if(32776==(53768&e)&&7&e|(3072&e)>>7|(8192&e)>>8)t.cycles++,t.data[(496&e)>>4]=t.readData(t.dataView.getUint16(28,!0)+(7&e|(3072&e)>>7|(8192&e)>>8));else if(32768==(65039&e))t.cycles++,t.data[(496&e)>>4]=t.readData(t.dataView.getUint16(30,!0));else if(36865==(65039&e)){const a=t.dataView.getUint16(30,!0);t.cycles++,t.data[(496&e)>>4]=t.readData(a),t.dataView.setUint16(30,a+1,!0)}else if(36866==(65039&e)){const a=t.dataView.getUint16(30,!0)-1;t.dataView.setUint16(30,a,!0),t.cycles++,t.data[(496&e)>>4]=t.readData(a)}else if(32768==(53768&e)&&7&e|(3072&e)>>7|(8192&e)>>8)t.cycles++,t.data[(496&e)>>4]=t.readData(t.dataView.getUint16(30,!0)+(7&e|(3072&e)>>7|(8192&e)>>8));else if(38344===e)t.data[0]=t.progBytes[t.dataView.getUint16(30,!0)],t.cycles+=2;else if(36868==(65039&e))t.data[(496&e)>>4]=t.progBytes[t.dataView.getUint16(30,!0)],t.cycles+=2;else if(36869==(65039&e)){const a=t.dataView.getUint16(30,!0);t.data[(496&e)>>4]=t.progBytes[a],t.dataView.setUint16(30,a+1,!0),t.cycles+=2}else if(37894==(65039&e)){const a=t.data[(496&e)>>4],d=a>>>1;t.data[(496&e)>>4]=d;let i=224&t.data[95];i|=d?0:2,i|=1&a,i|=i>>2&1^1&i?8:0,i|=i>>2&1^i>>3&1?16:0,t.data[95]=i}else if(11264==(64512&e))t.data[(496&e)>>4]=t.data[15&e|(512&e)>>5];else if(256==(65280&e)){const a=2*(15&e),d=2*((240&e)>>4);t.data[d]=t.data[a],t.data[d+1]=t.data[a+1]}else if(39936==(64512&e)){const a=t.data[(496&e)>>4]*t.data[15&e|(512&e)>>5];t.dataView.setUint16(0,a,!0),t.data[95]=252&t.data[95]|(65535&a?0:2)|(32768&a?1:0),t.cycles++}else if(512==(65280&e)){const a=t.dataView.getInt8(16+((240&e)>>4))*t.dataView.getInt8(16+(15&e));t.dataView.setInt16(0,a,!0),t.data[95]=252&t.data[95]|(65535&a?0:2)|(32768&a?1:0),t.cycles++}else if(768==(65416&e)){const a=t.dataView.getInt8(16+((112&e)>>4))*t.data[16+(7&e)];t.dataView.setInt16(0,a,!0),t.data[95]=252&t.data[95]|(65535&a?0:2)|(32768&a?1:0),t.cycles++}else if(37889==(65039&e)){const a=(496&e)>>4,d=t.data[a],i=0-d;t.data[a]=i;let s=192&t.data[95];s|=i?0:2,s|=128&i?4:0,s|=128===i?8:0,s|=s>>2&1^s>>3&1?16:0,s|=i?1:0,s|=1&(i|d)?32:0,t.data[95]=s}else if(0===e);else if(10240==(64512&e)){const a=t.data[(496&e)>>4]|t.data[15&e|(512&e)>>5];t.data[(496&e)>>4]=a;let d=225&t.data[95];d|=a?0:2,d|=128&a?4:0,d|=d>>2&1^d>>3&1?16:0,t.data[95]=d}else if(24576==(61440&e)){const a=t.data[16+((240&e)>>4)]|15&e|(3840&e)>>4;t.data[16+((240&e)>>4)]=a;let d=225&t.data[95];d|=a?0:2,d|=128&a?4:0,d|=d>>2&1^d>>3&1?16:0,t.data[95]=d}else if(47104==(63488&e))t.writeData(32+(15&e|(1536&e)>>5),t.data[(496&e)>>4]);else if(36879==(65039&e)){const a=t.dataView.getUint16(93,!0)+1;t.dataView.setUint16(93,a,!0),t.data[(496&e)>>4]=t.data[a],t.cycles++}else if(37391==(65039&e)){const a=t.dataView.getUint16(93,!0);t.data[a]=t.data[(496&e)>>4],t.dataView.setUint16(93,a-1,!0),t.cycles++}else if(53248==(61440&e)){const a=(2047&e)-(2048&e?2048:0),d=t.pc+1,i=t.dataView.getUint16(93,!0),{pc22Bits:s}=t;t.data[i]=255&d,t.data[i-1]=d>>8&255,s&&(t.data[i-2]=d>>16&255),t.dataView.setUint16(93,i-(s?3:2),!0),t.pc+=a,t.cycles+=s?3:2}else if(38152===e){const{pc22Bits:a}=t,e=t.dataView.getUint16(93,!0)+(a?3:2);t.dataView.setUint16(93,e,!0),t.pc=(t.data[e-1]<<8)+t.data[e]-1,a&&(t.pc|=t.data[e-2]<<16),t.cycles+=a?4:3}else if(38168===e){const{pc22Bits:a}=t,e=t.dataView.getUint16(93,!0)+(a?3:2);t.dataView.setUint16(93,e,!0),t.pc=(t.data[e-1]<<8)+t.data[e]-1,a&&(t.pc|=t.data[e-2]<<16),t.cycles+=a?4:3,t.data[95]|=128}else if(49152==(61440&e))t.pc=t.pc+((2047&e)-(2048&e?2048:0)),t.cycles++;else if(37895==(65039&e)){const a=t.data[(496&e)>>4],d=a>>>1|(1&t.data[95])<<7;t.data[(496&e)>>4]=d;let i=224&t.data[95];i|=d?0:2,i|=128&d?4:0,i|=1&a?1:0,i|=i>>2&1^1&i?8:0,i|=i>>2&1^i>>3&1?16:0,t.data[95]=i}else if(2048==(64512&e)){const a=t.data[(496&e)>>4],d=t.data[15&e|(512&e)>>5];let i=t.data[95];const s=a-d-(1&i);t.data[(496&e)>>4]=s,i=192&i|(!s&&i>>1&1?2:0)|(d+(1&i)>a?1:0),i|=128&s?4:0,i|=(a^d)&(a^s)&128?8:0,i|=i>>2&1^i>>3&1?16:0,i|=1&(~a&d|d&s|s&~a)?32:0,t.data[95]=i}else if(16384==(61440&e)){const a=t.data[16+((240&e)>>4)],d=15&e|(3840&e)>>4;let i=t.data[95];const s=a-d-(1&i);t.data[16+((240&e)>>4)]=s,i=192&i|(!s&&i>>1&1?2:0)|(d+(1&i)>a?1:0),i|=128&s?4:0,i|=(a^d)&(a^s)&128?8:0,i|=i>>2&1^i>>3&1?16:0,i|=1&(~a&d|d&s|s&~a)?32:0,t.data[95]=i}else if(39424==(65280&e)){const a=32+((248&e)>>3);t.writeData(a,t.readData(a)|1<<(7&e)),t.cycles++}else if(39168==(65280&e)){if(!(t.readData(32+((248&e)>>3))&1<<(7&e))){const e=a(t.progMem[t.pc+1])?2:1;t.cycles+=e,t.pc+=e}}else if(39680==(65280&e)){if(t.readData(32+((248&e)>>3))&1<<(7&e)){const e=a(t.progMem[t.pc+1])?2:1;t.cycles+=e,t.pc+=e}}else if(38656==(65280&e)){const a=2*((48&e)>>4)+24,d=t.dataView.getUint16(a,!0),i=15&e|(192&e)>>2,s=d-i;t.dataView.setUint16(a,s,!0);let c=192&t.data[95];c|=s?0:2,c|=32768&s?4:0,c|=d&~s&32768?8:0,c|=c>>2&1^c>>3&1?16:0,c|=i>d?1:0,c|=1&(~d&i|i&s|s&~d)?32:0,t.data[95]=c,t.cycles++}else if(64512==(65032&e)){if(!(t.data[(496&e)>>4]&1<<(7&e))){const e=a(t.progMem[t.pc+1])?2:1;t.cycles+=e,t.pc+=e}}else if(65024==(65032&e)){if(t.data[(496&e)>>4]&1<<(7&e)){const e=a(t.progMem[t.pc+1])?2:1;t.cycles+=e,t.pc+=e}}else if(38280===e);else if(38376===e);else if(38392===e);else if(37376==(65039&e)){const a=t.data[(496&e)>>4],d=t.progMem[t.pc+1];t.writeData(d,a),t.pc++,t.cycles++}else if(37388==(65039&e))t.writeData(t.dataView.getUint16(26,!0),t.data[(496&e)>>4]),t.cycles++;else if(37389==(65039&e)){const a=t.dataView.getUint16(26,!0);t.writeData(a,t.data[(496&e)>>4]),t.dataView.setUint16(26,a+1,!0),t.cycles++}else if(37390==(65039&e)){const a=t.data[(496&e)>>4],d=t.dataView.getUint16(26,!0)-1;t.dataView.setUint16(26,d,!0),t.writeData(d,a),t.cycles++}else if(33288==(65039&e))t.writeData(t.dataView.getUint16(28,!0),t.data[(496&e)>>4]),t.cycles++;else if(37385==(65039&e)){const a=t.data[(496&e)>>4],d=t.dataView.getUint16(28,!0);t.writeData(d,a),t.dataView.setUint16(28,d+1,!0),t.cycles++}else if(37386==(65039&e)){const a=t.data[(496&e)>>4],d=t.dataView.getUint16(28,!0)-1;t.dataView.setUint16(28,d,!0),t.writeData(d,a),t.cycles++}else if(33288==(53768&e)&&7&e|(3072&e)>>7|(8192&e)>>8)t.writeData(t.dataView.getUint16(28,!0)+(7&e|(3072&e)>>7|(8192&e)>>8),t.data[(496&e)>>4]),t.cycles++;else if(33280==(65039&e))t.writeData(t.dataView.getUint16(30,!0),t.data[(496&e)>>4]),t.cycles++;else if(37377==(65039&e)){const a=t.dataView.getUint16(30,!0);t.writeData(a,t.data[(496&e)>>4]),t.dataView.setUint16(30,a+1,!0),t.cycles++}else if(37378==(65039&e)){const a=t.data[(496&e)>>4],d=t.dataView.getUint16(30,!0)-1;t.dataView.setUint16(30,d,!0),t.writeData(d,a),t.cycles++}else if(33280==(53768&e)&&7&e|(3072&e)>>7|(8192&e)>>8)t.writeData(t.dataView.getUint16(30,!0)+(7&e|(3072&e)>>7|(8192&e)>>8),t.data[(496&e)>>4]),t.cycles++;else if(6144==(64512&e)){const a=t.data[(496&e)>>4],d=t.data[15&e|(512&e)>>5],i=a-d;t.data[(496&e)>>4]=i;let s=192&t.data[95];s|=i?0:2,s|=128&i?4:0,s|=(a^d)&(a^i)&128?8:0,s|=s>>2&1^s>>3&1?16:0,s|=d>a?1:0,s|=1&(~a&d|d&i|i&~a)?32:0,t.data[95]=s}else if(20480==(61440&e)){const a=t.data[16+((240&e)>>4)],d=15&e|(3840&e)>>4,i=a-d;t.data[16+((240&e)>>4)]=i;let s=192&t.data[95];s|=i?0:2,s|=128&i?4:0,s|=(a^d)&(a^i)&128?8:0,s|=s>>2&1^s>>3&1?16:0,s|=d>a?1:0,s|=1&(~a&d|d&i|i&~a)?32:0,t.data[95]=s}else if(37890==(65039&e)){const a=(496&e)>>4,d=t.data[a];t.data[a]=(15&d)<<4|(240&d)>>>4}else if(38312===e);else if(37380==(65039&e)){const a=(496&e)>>4,d=t.data[a],i=t.data[t.dataView.getUint16(30,!0)];t.data[t.dataView.getUint16(30,!0)]=d,t.data[a]=i}t.pc=(t.pc+1)%t.progMem.length,t.cycles++}Object.defineProperty(exports,"__esModule",{value:!0}),exports.avrInstruction=t;
-},{}],"X0BL":[function(require,module,exports) {
-"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.AVRIOPort=exports.PinOverrideMode=exports.PinState=exports.portLConfig=exports.portKConfig=exports.portJConfig=exports.portHConfig=exports.portGConfig=exports.portFConfig=exports.portEConfig=exports.portDConfig=exports.portCConfig=exports.portBConfig=exports.portAConfig=void 0;const t={PIN:32,DDR:33,PORT:34};exports.portAConfig=t;const o={PIN:35,DDR:36,PORT:37};exports.portBConfig=o;const e={PIN:38,DDR:39,PORT:40};exports.portCConfig=e;const i={PIN:41,DDR:42,PORT:43};exports.portDConfig=i;const s={PIN:44,DDR:45,PORT:46};exports.portEConfig=s;const r={PIN:47,DDR:48,PORT:49};exports.portFConfig=r;const n={PIN:50,DDR:51,PORT:52};exports.portGConfig=n;const p={PIN:256,DDR:257,PORT:258};exports.portHConfig=p;const a={PIN:259,DDR:260,PORT:261};exports.portJConfig=a;const P={PIN:262,DDR:263,PORT:264};exports.portKConfig=P;const h={PIN:265,DDR:266,PORT:267};var l,d;exports.portLConfig=h,exports.PinState=l,function(t){t[t.Low=0]="Low",t[t.High=1]="High",t[t.Input=2]="Input",t[t.InputPullUp=3]="InputPullUp"}(l||(exports.PinState=l={})),exports.PinOverrideMode=d,function(t){t[t.None=0]="None",t[t.Enable=1]="Enable",t[t.Set=2]="Set",t[t.Clear=3]="Clear",t[t.Toggle=4]="Toggle"}(d||(exports.PinOverrideMode=d={}));class R{constructor(t,o){this.cpu=t,this.portConfig=o,this.listeners=[],this.pinValue=0,this.overrideMask=255,this.lastValue=0,this.lastDdr=0,t.writeHooks[o.DDR]=(e=>{const i=t.data[o.PORT];return t.data[o.DDR]=e,this.updatePinRegister(i,e),this.writeGpio(i,e),!0}),t.writeHooks[o.PORT]=(e=>{const i=t.data[o.DDR];return t.data[o.PORT]=e,this.updatePinRegister(e,i),this.writeGpio(e,i),!0}),t.writeHooks[o.PIN]=(e=>{const i=t.data[o.PORT],s=t.data[o.DDR],r=i^e;return t.data[o.PORT]=r,t.data[o.PIN]=t.data[o.PIN]&~s|r&s,this.writeGpio(r,s),!0}),t.gpioTimerHooks[o.PORT]=((e,i)=>{const s=1<<e;if(i==d.None)this.overrideMask|=s;else switch(this.overrideMask&=~s,i){case d.Enable:this.overrideValue&=~s,this.overrideValue|=t.data[o.PORT]&s;break;case d.Set:this.overrideValue|=s;break;case d.Clear:this.overrideValue&=~s;break;case d.Toggle:this.overrideValue^=s}this.writeGpio(t.data[o.PORT],t.data[o.DDR])})}addListener(t){this.listeners.push(t)}removeListener(t){this.listeners=this.listeners.filter(o=>o!==t)}pinState(t){const o=this.cpu.data[this.portConfig.DDR],e=this.cpu.data[this.portConfig.PORT],i=1<<t;return o&i?this.lastValue&i?l.High:l.Low:e&i?l.InputPullUp:l.Input}setPin(t,o){const e=1<<t;this.pinValue&=~e,o&&(this.pinValue|=e),this.updatePinRegister(this.cpu.data[this.portConfig.PORT],this.cpu.data[this.portConfig.DDR])}updatePinRegister(t,o){this.cpu.data[this.portConfig.PIN]=this.pinValue&~o|t&o}writeGpio(t,o){const e=(t&this.overrideMask|this.overrideValue)&o|t&~o,i=this.lastValue;if(e!==i||o!==this.lastDdr){this.lastValue=e,this.lastDdr=o;for(const t of this.listeners)t(e,i)}}}exports.AVRIOPort=R;
-},{}],"eu9G":[function(require,module,exports) {
-"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.AVRTimer=exports.timer2Config=exports.timer1Config=exports.timer0Config=void 0;var t=require("./gpio");const i={0:0,1:1,2:8,3:64,4:256,5:1024,6:0,7:0},e={TOV:1,OCFA:2,OCFB:4,TOIE:1,OCIEA:2,OCIEB:4},o=Object.assign({bits:8,captureInterrupt:0,compAInterrupt:28,compBInterrupt:30,ovfInterrupt:32,TIFR:53,OCRA:71,OCRB:72,ICR:0,TCNT:70,TCCRA:68,TCCRB:69,TCCRC:0,TIMSK:110,dividers:i,compPortA:t.portDConfig.PORT,compPinA:6,compPortB:t.portDConfig.PORT,compPinB:5},e);exports.timer0Config=o;const s=Object.assign({bits:16,captureInterrupt:20,compAInterrupt:22,compBInterrupt:24,ovfInterrupt:26,TIFR:54,OCRA:136,OCRB:138,ICR:134,TCNT:132,TCCRA:128,TCCRB:129,TCCRC:130,TIMSK:111,dividers:i,compPortA:t.portBConfig.PORT,compPinA:1,compPortB:t.portBConfig.PORT,compPinB:2},e);exports.timer1Config=s;const r=Object.assign({bits:8,captureInterrupt:0,compAInterrupt:14,compBInterrupt:16,ovfInterrupt:18,TIFR:55,OCRA:179,OCRB:180,ICR:0,TCNT:178,TCCRA:176,TCCRB:177,TCCRC:0,TIMSK:112,dividers:{0:0,1:1,2:8,3:32,4:64,5:128,6:256,7:1024},compPortA:t.portBConfig.PORT,compPinA:3,compPortB:t.portDConfig.PORT,compPinB:3},e);var c,h,n;exports.timer2Config=r,function(t){t[t.Normal=0]="Normal",t[t.PWMPhaseCorrect=1]="PWMPhaseCorrect",t[t.CTC=2]="CTC",t[t.FastPWM=3]="FastPWM",t[t.PWMPhaseFrequencyCorrect=4]="PWMPhaseFrequencyCorrect",t[t.Reserved=5]="Reserved"}(c||(c={})),function(t){t[t.Max=0]="Max",t[t.Top=1]="Top",t[t.Bottom=2]="Bottom"}(h||(h={})),function(t){t[t.Immediate=0]="Immediate",t[t.Top=1]="Top",t[t.Bottom=2]="Bottom"}(n||(n={}));const p=1,a=2,d=1,{Normal:C,PWMPhaseCorrect:u,CTC:m,FastPWM:B,Reserved:T,PWMPhaseFrequencyCorrect:g}=c,O=[[C,255,n.Immediate,h.Max,0],[u,255,n.Top,h.Bottom,0],[m,p,n.Immediate,h.Max,0],[B,255,n.Bottom,h.Max,0],[T,255,n.Immediate,h.Max,0],[u,p,n.Top,h.Bottom,d],[T,255,n.Immediate,h.Max,0],[B,p,n.Bottom,h.Top,d]],M=[[C,65535,n.Immediate,h.Max,0],[u,255,n.Top,h.Bottom,0],[u,511,n.Top,h.Bottom,0],[u,1023,n.Top,h.Bottom,0],[m,p,n.Immediate,h.Max,0],[B,255,n.Bottom,h.Top,0],[B,511,n.Bottom,h.Top,0],[B,1023,n.Bottom,h.Top,0],[g,a,n.Bottom,h.Bottom,0],[g,p,n.Bottom,h.Bottom,d],[u,a,n.Top,h.Bottom,0],[u,p,n.Top,h.Bottom,d],[m,a,n.Immediate,h.Max,0],[T,65535,n.Immediate,h.Max,0],[B,a,n.Bottom,h.Top,d],[B,p,n.Bottom,h.Top,d]];function l(i){switch(i){case 1:return t.PinOverrideMode.Toggle;case 2:return t.PinOverrideMode.Clear;case 3:return t.PinOverrideMode.Set;default:return t.PinOverrideMode.Enable}}class A{constructor(t,i){if(this.cpu=t,this.config=i,this.MAX=16===this.config.bits?65535:255,this.lastCycle=0,this.ocrA=0,this.nextOcrA=0,this.ocrB=0,this.nextOcrB=0,this.ocrUpdateMode=n.Immediate,this.tovUpdateMode=h.Max,this.icr=0,this.tcnt=0,this.tcntNext=0,this.tcntUpdated=!1,this.updateDivider=!1,this.countingUp=!0,this.divider=0,this.highByteTemp=0,this.OVF={address:this.config.ovfInterrupt,flagRegister:this.config.TIFR,flagMask:this.config.TOV,enableRegister:this.config.TIMSK,enableMask:this.config.TOIE},this.OCFA={address:this.config.compAInterrupt,flagRegister:this.config.TIFR,flagMask:this.config.OCFA,enableRegister:this.config.TIMSK,enableMask:this.config.OCIEA},this.OCFB={address:this.config.compBInterrupt,flagRegister:this.config.TIFR,flagMask:this.config.OCFB,enableRegister:this.config.TIMSK,enableMask:this.config.OCIEB},this.count=((t=!0)=>{const{divider:i,lastCycle:e,cpu:o}=this,{cycles:s}=o,r=s-e;if(i&&r>=i){const t=Math.floor(r/i);this.lastCycle+=t*i;const e=this.tcnt,{timerMode:s,TOP:c}=this,p=s===u||s===g,a=p?this.phasePwmCount(e,t):(e+t)%(c+1),d=e+t>c;if(this.tcntUpdated||(this.tcnt=a,p||this.timerUpdated(a,e)),!p){if(s===B&&d){const{compA:t,compB:i}=this;t&&this.updateCompPin(t,"A",!0),i&&this.updateCompPin(i,"B",!0)}this.ocrUpdateMode==n.Bottom&&d&&(this.ocrA=this.nextOcrA,this.ocrB=this.nextOcrB),!d||this.tovUpdateMode!=h.Top&&c!==this.MAX||o.setInterruptFlag(this.OVF)}}if(this.tcntUpdated&&(this.tcnt=this.tcntNext,this.tcntUpdated=!1),this.updateDivider){const t=this.config.dividers[this.CS];return this.lastCycle=t?this.cpu.cycles:0,this.updateDivider=!1,this.divider=t,void(t&&o.addClockEvent(this.count,this.lastCycle+t-o.cycles))}t&&i&&o.addClockEvent(this.count,this.lastCycle+i-o.cycles)}),this.updateWGMConfig(),this.cpu.readHooks[i.TCNT]=(t=>(this.count(!1),16===this.config.bits&&(this.cpu.data[t+1]=this.tcnt>>8),this.cpu.data[t]=255&this.tcnt)),this.cpu.writeHooks[i.TCNT]=(t=>{this.tcntNext=this.highByteTemp<<8|t,this.countingUp=!0,this.tcntUpdated=!0,this.cpu.updateClockEvent(this.count,0),this.divider&&this.timerUpdated(this.tcntNext,this.tcntNext)}),this.cpu.writeHooks[i.OCRA]=(t=>{this.nextOcrA=this.highByteTemp<<8|t,this.ocrUpdateMode===n.Immediate&&(this.ocrA=this.nextOcrA)}),this.cpu.writeHooks[i.OCRB]=(t=>{this.nextOcrB=this.highByteTemp<<8|t,this.ocrUpdateMode===n.Immediate&&(this.ocrB=this.nextOcrB)}),this.cpu.writeHooks[i.ICR]=(t=>{this.icr=this.highByteTemp<<8|t}),16===this.config.bits){const t=t=>{this.highByteTemp=t};this.cpu.writeHooks[i.TCNT+1]=t,this.cpu.writeHooks[i.OCRA+1]=t,this.cpu.writeHooks[i.OCRB+1]=t,this.cpu.writeHooks[i.ICR+1]=t}t.writeHooks[i.TCCRA]=(t=>(this.cpu.data[i.TCCRA]=t,this.updateWGMConfig(),!0)),t.writeHooks[i.TCCRB]=(t=>(this.cpu.data[i.TCCRB]=t,this.updateDivider=!0,this.cpu.clearClockEvent(this.count),this.cpu.addClockEvent(this.count,0),this.updateWGMConfig(),!0)),t.writeHooks[i.TIFR]=(t=>(this.cpu.data[i.TIFR]=t,this.cpu.clearInterruptByFlag(this.OVF,t),this.cpu.clearInterruptByFlag(this.OCFA,t),this.cpu.clearInterruptByFlag(this.OCFB,t),!0)),t.writeHooks[i.TIMSK]=(t=>{this.cpu.updateInterruptEnable(this.OVF,t),this.cpu.updateInterruptEnable(this.OCFA,t),this.cpu.updateInterruptEnable(this.OCFB,t)})}reset(){this.divider=0,this.lastCycle=0,this.ocrA=0,this.nextOcrA=0,this.ocrB=0,this.nextOcrB=0,this.icr=0,this.tcnt=0,this.tcntNext=0,this.tcntUpdated=!1,this.countingUp=!1,this.updateDivider=!0}get TCCRA(){return this.cpu.data[this.config.TCCRA]}get TCCRB(){return this.cpu.data[this.config.TCCRB]}get TIMSK(){return this.cpu.data[this.config.TIMSK]}get CS(){return 7&this.TCCRB}get WGM(){const t=16===this.config.bits?24:8;return(this.TCCRB&t)>>1|3&this.TCCRA}get TOP(){switch(this.topValue){case p:return this.ocrA;case a:return this.icr;default:return this.topValue}}updateWGMConfig(){const{config:i,WGM:e}=this,o=16===i.bits?M:O,s=this.cpu.data[i.TCCRA],[r,c,h,n,p]=o[e];this.timerMode=r,this.topValue=c,this.ocrUpdateMode=h,this.tovUpdateMode=n;const a=r===B||r===u||r===g,C=this.compA;this.compA=s>>6&3,1!==this.compA||!a||p&d||(this.compA=0),!!C!=!!this.compA&&this.updateCompA(this.compA?t.PinOverrideMode.Enable:t.PinOverrideMode.None);const m=this.compB;this.compB=s>>4&3,1===this.compB&&a&&(this.compB=0),!!m!=!!this.compB&&this.updateCompB(this.compB?t.PinOverrideMode.Enable:t.PinOverrideMode.None)}phasePwmCount(t,i){const{ocrA:e,ocrB:o,TOP:s,tcntUpdated:r}=this;for(;i>0;)this.countingUp?++t!==s||r||(this.countingUp=!1,this.ocrUpdateMode===n.Top&&(this.ocrA=this.nextOcrA,this.ocrB=this.nextOcrB)):--t||r||(this.countingUp=!0,this.cpu.setInterruptFlag(this.OVF),this.ocrUpdateMode===n.Bottom&&(this.ocrA=this.nextOcrA,this.ocrB=this.nextOcrB)),r||t!==e||(this.cpu.setInterruptFlag(this.OCFA),this.compA&&this.updateCompPin(this.compA,"A")),r||t!==o||(this.cpu.setInterruptFlag(this.OCFB),this.compB&&this.updateCompPin(this.compB,"B")),i--;return t}timerUpdated(t,i){const{ocrA:e,ocrB:o}=this,s=i>t;(i<e||s)&&t>=e&&(this.cpu.setInterruptFlag(this.OCFA),this.compA&&this.updateCompPin(this.compA,"A")),(i<o||s)&&t>=o&&(this.cpu.setInterruptFlag(this.OCFB),this.compB&&this.updateCompPin(this.compB,"B"))}updateCompPin(i,e,o=!1){let s=t.PinOverrideMode.None;const r=3===i,c=this.countingUp===r;switch(this.timerMode){case C:case m:s=l(i);break;case B:s=1===i?o?t.PinOverrideMode.None:t.PinOverrideMode.Toggle:r!==o?t.PinOverrideMode.Set:t.PinOverrideMode.Clear;break;case u:case g:s=1===i?t.PinOverrideMode.Toggle:c?t.PinOverrideMode.Set:t.PinOverrideMode.Clear}s!==t.PinOverrideMode.None&&("A"===e?this.updateCompA(s):this.updateCompB(s))}updateCompA(t){const{compPortA:i,compPinA:e}=this.config,o=this.cpu.gpioTimerHooks[i];o&&o(e,t,i)}updateCompB(t){const{compPortB:i,compPinB:e}=this.config,o=this.cpu.gpioTimerHooks[i];o&&o(e,t,i)}}exports.AVRTimer=A;
-},{"./gpio":"X0BL"}],"Iff3":[function(require,module,exports) {
-"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.AVRUSART=exports.usart0Config=void 0;const t={rxCompleteInterrupt:36,dataRegisterEmptyInterrupt:38,txCompleteInterrupt:40,UCSRA:192,UCSRB:193,UCSRC:194,UBRRL:196,UBRRH:197,UDR:198};exports.usart0Config=t;const e=128,s=64,i=32,r=16,a=8,n=4,h=2,u=1,c=128,o=64,l=32,p=16,R=8,C=4,g=2,f=1,d=128,B=64,U=32,y=16,S=8,x=4,m=2,I=1,b={5:31,6:63,7:127,8:255,9:255};class E{constructor(t,r,a){this.cpu=t,this.config=r,this.freqHz=a,this.onByteTransmit=null,this.onLineTransmit=null,this.onRxComplete=null,this.rxBusyValue=!1,this.rxByte=0,this.lineBuffer="",this.RXC={address:this.config.rxCompleteInterrupt,flagRegister:this.config.UCSRA,flagMask:e,enableRegister:this.config.UCSRB,enableMask:c,constant:!0},this.UDRE={address:this.config.dataRegisterEmptyInterrupt,flagRegister:this.config.UCSRA,flagMask:i,enableRegister:this.config.UCSRB,enableMask:l},this.TXC={address:this.config.txCompleteInterrupt,flagRegister:this.config.UCSRA,flagMask:s,enableRegister:this.config.UCSRB,enableMask:o},this.reset(),this.cpu.writeHooks[r.UCSRA]=(e=>(t.data[r.UCSRA]=e&(u|h),t.clearInterruptByFlag(this.TXC,e),!0)),this.cpu.writeHooks[r.UCSRB]=((e,s)=>{t.updateInterruptEnable(this.RXC,e),t.updateInterruptEnable(this.UDRE,e),t.updateInterruptEnable(this.TXC,e),e&p&&s&p&&t.clearInterrupt(this.RXC),e&R&&!(s&R)&&t.setInterruptFlag(this.UDRE)}),this.cpu.readHooks[r.UDR]=(()=>{var t;const e=null!==(t=b[this.bitsPerChar])&&void 0!==t?t:255,s=this.rxByte&e;return this.rxByte=0,this.cpu.clearInterrupt(this.RXC),s}),this.cpu.writeHooks[r.UDR]=(e=>{if(this.onByteTransmit&&this.onByteTransmit(e),this.onLineTransmit){const t=String.fromCharCode(e);"\n"===t?(this.onLineTransmit(this.lineBuffer),this.lineBuffer=""):this.lineBuffer+=t}this.cpu.addClockEvent(()=>{t.setInterruptFlag(this.UDRE),t.setInterruptFlag(this.TXC)},this.cyclesPerChar),this.cpu.clearInterrupt(this.TXC),this.cpu.clearInterrupt(this.UDRE)})}reset(){this.cpu.data[this.config.UCSRA]=i,this.cpu.data[this.config.UCSRB]=0,this.cpu.data[this.config.UCSRC]=x|m,this.rxBusyValue=!1,this.rxByte=0,this.lineBuffer=""}get rxBusy(){return this.rxBusyValue}writeByte(t){const{cpu:e,config:s}=this;return!(this.rxBusyValue||!(e.data[s.UCSRB]&p))&&(this.rxBusyValue=!0,e.addClockEvent(()=>{var s;this.rxByte=t,this.rxBusyValue=!1,e.setInterruptFlag(this.RXC),null===(s=this.onRxComplete)||void 0===s||s.call(this)},this.cyclesPerChar),!0)}get cyclesPerChar(){const t=1+this.bitsPerChar+this.stopBits+(this.parityEnabled?1:0);return(this.UBRR*this.multiplier+1)*t}get UBRR(){return this.cpu.data[this.config.UBRRH]<<8|this.cpu.data[this.config.UBRRL]}get multiplier(){return this.cpu.data[this.config.UCSRA]&h?8:16}get baudRate(){return Math.floor(this.freqHz/(this.multiplier*(1+this.UBRR)))}get bitsPerChar(){switch((this.cpu.data[this.config.UCSRC]&(x|m))>>1|this.cpu.data[this.config.UCSRB]&C){case 0:return 5;case 1:return 6;case 2:return 7;case 3:return 8;default:case 7:return 9}}get stopBits(){return this.cpu.data[this.config.UCSRC]&S?2:1}get parityEnabled(){return!!(this.cpu.data[this.config.UCSRC]&U)}get parityOdd(){return!!(this.cpu.data[this.config.UCSRC]&y)}}exports.AVRUSART=E;
-},{}],"niNh":[function(require,module,exports) {
-"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.AVREEPROM=exports.eepromConfig=exports.EEPROMMemoryBackend=void 0;class e{constructor(e){this.memory=new Uint8Array(e),this.memory.fill(255)}readMemory(e){return this.memory[e]}writeMemory(e,t){this.memory[e]&=t}eraseMemory(e){this.memory[e]=255}}exports.EEPROMMemoryBackend=e;const t={eepromReadyInterrupt:44,EECR:63,EEDR:64,EEARL:65,EEARH:66,eraseCycles:28800,writeCycles:28800};exports.eepromConfig=t;const s=1,i=2,r=4,c=8,o=16,h=32;class a{constructor(e,a,n=t){this.cpu=e,this.backend=a,this.config=n,this.writeEnabledCycles=0,this.writeCompleteCycles=0,this.EER={address:this.config.eepromReadyInterrupt,flagRegister:this.config.EECR,flagMask:i,enableRegister:this.config.EECR,enableMask:c,constant:!0,inverseFlag:!0},this.cpu.writeHooks[this.config.EECR]=(e=>{const{EEARH:t,EEARL:c,EECR:a,EEDR:n}=this.config,l=this.cpu.data[t]<<8|this.cpu.data[c];if(e&s&&this.cpu.clearInterrupt(this.EER),e&r){const e=4;this.writeEnabledCycles=this.cpu.cycles+e,this.cpu.addClockEvent(()=>{this.cpu.data[a]&=~r},e)}if(e&s)return this.cpu.data[n]=this.backend.readMemory(l),this.cpu.cycles+=4,!0;if(e&i){if(this.cpu.cycles>=this.writeEnabledCycles)return!0;if(this.cpu.cycles<this.writeCompleteCycles)return!0;const t=this.cpu.data[n];return this.writeCompleteCycles=this.cpu.cycles,e&h||(this.backend.eraseMemory(l),this.writeCompleteCycles+=this.config.eraseCycles),e&o||(this.backend.writeMemory(l,t),this.writeCompleteCycles+=this.config.writeCycles),this.cpu.data[a]|=i,this.cpu.addClockEvent(()=>{this.cpu.setInterruptFlag(this.EER)},this.writeCompleteCycles-this.cpu.cycles),this.cpu.cycles+=2,!0}return!1})}}exports.AVREEPROM=a;
-},{}],"PbiE":[function(require,module,exports) {
-"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.AVRTWI=exports.NoopTWIEventHandler=exports.twiConfig=void 0;const t=128,e=64,s=32,i=16,a=8,r=4,c=1,n=248,o=2,h=1,p=3,u=254,l=1,d=0,T=248,W=8,f=16,R=24,g=32,S=40,w=48,v=56,I=64,C=72,H=80,m=88,x={twiInterrupt:48,TWBR:184,TWSR:185,TWAR:186,TWDR:187,TWCR:188,TWAMR:189};exports.twiConfig=x;class y{constructor(t){this.twi=t}start(){this.twi.completeStart()}stop(){this.twi.completeStop()}connectToSlave(){this.twi.completeConnect(!1)}writeByte(){this.twi.completeWrite(!1)}readByte(){this.twi.completeRead(255)}}exports.NoopTWIEventHandler=y;class B{constructor(a,n,o){this.cpu=a,this.config=n,this.freqHz=o,this.eventHandler=new y(this),this.TWI={address:this.config.twiInterrupt,flagRegister:this.config.TWCR,flagMask:t,enableRegister:this.config.TWCR,enableMask:c},this.updateStatus(T),this.cpu.writeHooks[n.TWCR]=(a=>{this.cpu.data[n.TWCR]=a;const c=a&t;this.cpu.clearInterruptByFlag(this.TWI,a),this.cpu.updateInterruptEnable(this.TWI,a);const{status:o}=this;if(c&&a&r){const t=this.cpu.data[this.config.TWDR];return this.cpu.addClockEvent(()=>{if(a&s)this.eventHandler.start(o!==T);else if(a&i)this.eventHandler.stop();else if(o===W||o===f)this.eventHandler.connectToSlave(t>>1,!(1&t));else if(o===R||o===S)this.eventHandler.writeByte(t);else if(o===I||o===H){const t=!!(a&e);this.eventHandler.readByte(t)}},0),!0}})}get prescaler(){switch(this.cpu.data[this.config.TWSR]&p){case 0:return 1;case 1:return 4;case 2:return 16;case 3:return 64}throw new Error("Invalid prescaler value!")}get sclFrequency(){return this.freqHz/(16+2*this.cpu.data[this.config.TWBR]*this.prescaler)}completeStart(){this.updateStatus(this.status===T?W:f)}completeStop(){this.cpu.data[this.config.TWCR]&=~i,this.updateStatus(T)}completeConnect(t){1&this.cpu.data[this.config.TWDR]?this.updateStatus(t?I:C):this.updateStatus(t?R:g)}completeWrite(t){this.updateStatus(t?S:w)}completeRead(t){const s=!!(this.cpu.data[this.config.TWCR]&e);this.cpu.data[this.config.TWDR]=t,this.updateStatus(s?H:m)}get status(){return this.cpu.data[this.config.TWSR]&n}updateStatus(t){const{TWSR:e}=this.config;this.cpu.data[e]=this.cpu.data[e]&~n|t,this.cpu.setInterruptFlag(this.TWI)}}exports.AVRTWI=B;
-},{}],"XwuY":[function(require,module,exports) {
-"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.AVRSPI=exports.spiConfig=void 0;const t=128,i=64,s=32,e=16,r=8,c=4,n=2,a=1,o=3,h=128,u=64,d=1,p={spiInterrupt:34,SPCR:76,SPSR:77,SPDR:78};exports.spiConfig=p;const l=8;class S{constructor(s,e,r){this.cpu=s,this.config=e,this.freqHz=r,this.onTransfer=null,this.transmissionActive=!1,this.receivedByte=0,this.SPI={address:this.config.spiInterrupt,flagRegister:this.config.SPSR,flagMask:h,enableRegister:this.config.SPCR,enableMask:t};const{SPCR:c,SPSR:n,SPDR:a}=e;s.writeHooks[a]=(t=>{var e,r;if(!(s.data[c]&i))return;if(this.transmissionActive)return s.data[n]|=u,!0;s.data[n]&=~u,this.cpu.clearInterrupt(this.SPI),this.receivedByte=null!==(r=null===(e=this.onTransfer)||void 0===e?void 0:e.call(this,t))&&void 0!==r?r:0;const o=this.clockDivider*l;return this.transmissionActive=!0,this.cpu.addClockEvent(()=>{this.cpu.data[a]=this.receivedByte,this.cpu.setInterruptFlag(this.SPI),this.transmissionActive=!1},o),!0}),s.writeHooks[n]=(t=>{this.cpu.data[n]=t,this.cpu.clearInterruptByFlag(this.SPI,t)})}reset(){this.transmissionActive=!1,this.receivedByte=0}get isMaster(){return!!(this.cpu.data[this.config.SPCR]&e)}get dataOrder(){return this.cpu.data[this.config.SPCR]&s?"lsbFirst":"msbFirst"}get spiMode(){return(this.cpu.data[this.config.SPCR]&c?2:0)|(this.cpu.data[this.config.SPCR]&r?1:0)}get clockDivider(){const t=this.cpu.data[this.config.SPSR]&d?2:4;switch(this.cpu.data[this.config.SPCR]&o){case 0:return t;case 1:return 4*t;case 2:return 16*t;case 3:return 32*t}throw new Error("Invalid divider value!")}get spiFrequency(){return this.freqHz/this.clockDivider}}exports.AVRSPI=S;
-},{}],"rLPZ":[function(require,module,exports) {
-"use strict";Object.defineProperty(exports,"__esModule",{value:!0}),exports.AVRClock=exports.clockConfig=void 0;const e=128,c={CLKPR:97};exports.clockConfig=c;const s=[1,2,4,8,16,32,64,128,256,2,4,8,16,32,64,128];class t{constructor(t,l,i=c){this.cpu=t,this.baseFreqHz=l,this.config=i,this.clockEnabledCycles=0,this.prescalerValue=1,this.cyclesDelta=0,this.cpu.writeHooks[this.config.CLKPR]=(c=>{if((!this.clockEnabledCycles||this.clockEnabledCycles<t.cycles)&&c===e)this.clockEnabledCycles=this.cpu.cycles+4;else if(this.clockEnabledCycles&&this.clockEnabledCycles>=t.cycles){this.clockEnabledCycles=0;const e=15&c,l=this.prescalerValue;this.prescalerValue=s[e],this.cpu.data[this.config.CLKPR]=e,l!==this.prescalerValue&&(this.cyclesDelta=(t.cycles+this.cyclesDelta)*(l/this.prescalerValue)-t.cycles)}return!0})}get frequency(){return this.baseFreqHz/this.prescalerValue}get prescaler(){return this.prescalerValue}get timeNanos(){return(this.cpu.cycles+this.cyclesDelta)/this.frequency*1e9}get timeMicros(){return(this.cpu.cycles+this.cyclesDelta)/this.frequency*1e6}get timeMillis(){return(this.cpu.cycles+this.cyclesDelta)/this.frequency*1e3}}exports.AVRClock=t;
-},{}],"tbbQ":[function(require,module,exports) {
-"use strict";Object.defineProperty(exports,"__esModule",{value:!0});var e={CPU:!0,avrInstruction:!0,avrInterrupt:!0,AVRTimer:!0,timer0Config:!0,timer1Config:!0,timer2Config:!0,AVRIOPort:!0,portAConfig:!0,portBConfig:!0,portCConfig:!0,portDConfig:!0,portEConfig:!0,portFConfig:!0,portGConfig:!0,portHConfig:!0,portJConfig:!0,portKConfig:!0,portLConfig:!0,PinState:!0,AVRUSART:!0,usart0Config:!0,AVREEPROM:!0,EEPROMMemoryBackend:!0,eepromConfig:!0,spiConfig:!0,AVRSPI:!0,AVRClock:!0,clockConfig:!0};Object.defineProperty(exports,"CPU",{enumerable:!0,get:function(){return r.CPU}}),Object.defineProperty(exports,"avrInstruction",{enumerable:!0,get:function(){return t.avrInstruction}}),Object.defineProperty(exports,"avrInterrupt",{enumerable:!0,get:function(){return n.avrInterrupt}}),Object.defineProperty(exports,"AVRTimer",{enumerable:!0,get:function(){return o.AVRTimer}}),Object.defineProperty(exports,"timer0Config",{enumerable:!0,get:function(){return o.timer0Config}}),Object.defineProperty(exports,"timer1Config",{enumerable:!0,get:function(){return o.timer1Config}}),Object.defineProperty(exports,"timer2Config",{enumerable:!0,get:function(){return o.timer2Config}}),Object.defineProperty(exports,"AVRIOPort",{enumerable:!0,get:function(){return i.AVRIOPort}}),Object.defineProperty(exports,"portAConfig",{enumerable:!0,get:function(){return i.portAConfig}}),Object.defineProperty(exports,"portBConfig",{enumerable:!0,get:function(){return i.portBConfig}}),Object.defineProperty(exports,"portCConfig",{enumerable:!0,get:function(){return i.portCConfig}}),Object.defineProperty(exports,"portDConfig",{enumerable:!0,get:function(){return i.portDConfig}}),Object.defineProperty(exports,"portEConfig",{enumerable:!0,get:function(){return i.portEConfig}}),Object.defineProperty(exports,"portFConfig",{enumerable:!0,get:function(){return i.portFConfig}}),Object.defineProperty(exports,"portGConfig",{enumerable:!0,get:function(){return i.portGConfig}}),Object.defineProperty(exports,"portHConfig",{enumerable:!0,get:function(){return i.portHConfig}}),Object.defineProperty(exports,"portJConfig",{enumerable:!0,get:function(){return i.portJConfig}}),Object.defineProperty(exports,"portKConfig",{enumerable:!0,get:function(){return i.portKConfig}}),Object.defineProperty(exports,"portLConfig",{enumerable:!0,get:function(){return i.portLConfig}}),Object.defineProperty(exports,"PinState",{enumerable:!0,get:function(){return i.PinState}}),Object.defineProperty(exports,"AVRUSART",{enumerable:!0,get:function(){return p.AVRUSART}}),Object.defineProperty(exports,"usart0Config",{enumerable:!0,get:function(){return p.usart0Config}}),Object.defineProperty(exports,"AVREEPROM",{enumerable:!0,get:function(){return u.AVREEPROM}}),Object.defineProperty(exports,"EEPROMMemoryBackend",{enumerable:!0,get:function(){return u.EEPROMMemoryBackend}}),Object.defineProperty(exports,"eepromConfig",{enumerable:!0,get:function(){return u.eepromConfig}}),Object.defineProperty(exports,"spiConfig",{enumerable:!0,get:function(){return c.spiConfig}}),Object.defineProperty(exports,"AVRSPI",{enumerable:!0,get:function(){return c.AVRSPI}}),Object.defineProperty(exports,"AVRClock",{enumerable:!0,get:function(){return g.AVRClock}}),Object.defineProperty(exports,"clockConfig",{enumerable:!0,get:function(){return g.clockConfig}});var r=require("./cpu/cpu"),t=require("./cpu/instruction"),n=require("./cpu/interrupt"),o=require("./peripherals/timer"),i=require("./peripherals/gpio"),p=require("./peripherals/usart"),u=require("./peripherals/eeprom"),f=require("./peripherals/twi");Object.keys(f).forEach(function(r){"default"!==r&&"__esModule"!==r&&(Object.prototype.hasOwnProperty.call(e,r)||r in exports&&exports[r]===f[r]||Object.defineProperty(exports,r,{enumerable:!0,get:function(){return f[r]}}))});var c=require("./peripherals/spi"),g=require("./peripherals/clock");
-},{"./cpu/cpu":"F3UQ","./cpu/instruction":"cvTP","./cpu/interrupt":"DZzW","./peripherals/timer":"eu9G","./peripherals/gpio":"X0BL","./peripherals/usart":"Iff3","./peripherals/eeprom":"niNh","./peripherals/twi":"PbiE","./peripherals/spi":"XwuY","./peripherals/clock":"rLPZ"}],"rACS":[function(require,module,exports) {
-"use strict";function s(s,t){for(const e of s.split("\n"))if(":"===e[0]&&"00"===e.substr(7,2)){const s=parseInt(e.substr(1,2),16),r=parseInt(e.substr(3,4),16);for(let o=0;o<s;o++)t[r+o]=parseInt(e.substr(9+2*o,2),16)}}Object.defineProperty(exports,"__esModule",{value:!0}),exports.loadHex=s;
-},{}],"HrFm":[function(require,module,exports) {
-"use strict";var t=s(require("avr8js")),e=require("./intelhex");function i(t){if("function"!=typeof WeakMap)return null;var e=new WeakMap,s=new WeakMap;return(i=function(t){return t?s:e})(t)}function s(t,e){if(!e&&t&&t.__esModule)return t;if(null===t||"object"!=typeof t&&"function"!=typeof t)return{default:t};var s=i(e);if(s&&s.has(t))return s.get(t);var r={},n=Object.defineProperty&&Object.getOwnPropertyDescriptor;for(var o in t)if("default"!==o&&Object.prototype.hasOwnProperty.call(t,o)){var a=n?Object.getOwnPropertyDescriptor(t,o):null;a&&(a.get||a.set)?Object.defineProperty(r,o,a):r[o]=t[o]}return r.default=t,s&&s.set(t,r),r}class r{constructor(t,e){this.frameId,this.cpu,this.timer0,this.portA,this.portB,this.portC,this.portD,this.program=new Uint16Array,this.clockFrequency=16e6,this.flashSize=32768,this.leds=t,this.button=e}loadGame(i){const s=new Uint8Array(this.flashSize/2);(0,e.loadHex)(i,s),this.program=new Uint16Array(s.buffer),this.cpu=new t.CPU(this.program),this.timer0=new t.AVRTimer(this.cpu,t.timer0Config),this.usart=new t.AVRUSART(this.cpu,t.usart0Config,this.clockFrequency),this.cache="",console.log(this.usart),this.usart.onByteTransmit=(t=>{const e=String.fromCharCode(t);if("\n"==e)return console.log(this.cache),void(this.cache="");this.cache+=e}),this.initPorts()}initPorts(){this.portA=new t.AVRIOPort(this.cpu,t.portAConfig),this.portB=new t.AVRIOPort(this.cpu,t.portBConfig),this.portC=new t.AVRIOPort(this.cpu,t.portCConfig),this.portD=new t.AVRIOPort(this.cpu,t.portDConfig),this.button.state=t.PinState.Low,this.button.domElement.addEventListener("mousedown",()=>this.buttonPressHandler()),this.button.domElement.addEventListener("mouseup",()=>this.buttonReleaseHandler()),this.button.domElement.addEventListener("mouseleave",()=>this.buttonReleaseHandler()),this.portA.addListener(()=>{this.ledHandler("portA")}),this.portB.addListener(()=>{this.ledHandler("portB")}),this.portC.addListener(()=>{this.ledHandler("portC")}),this.portD.addListener(()=>{this.ledHandler("portD")})}buttonPressHandler(){this[this.button.avrPort].setPin(this.button.avrPin,t.PinState.High),this.button.state=t.PinState.High}buttonReleaseHandler(){this[this.button.avrPort].pinState(this.button.avrPin)!=t.PinState.Low&&(this[this.button.avrPort].setPin(this.button.avrPin,t.PinState.Low),this.button.state=t.PinState.Low)}ledHandler(e){const i=this.leds.filter(t=>t.avrPort==e);for(let s of i)this[e].pinState(s.avrPin)!==t.PinState.High?(s.domElement.classList.remove("on"),s.domElement.classList.add("off"),s.state=!1):(s.domElement.classList.remove("off"),s.domElement.classList.add("on"),s.state=!0)}executeGame(){const e=this.cpu.cycles+this.clockFrequency/60;for(;this.cpu.cycles<=e;)t.avrInstruction(this.cpu),this.cpu.tick();this.frameId=requestAnimationFrame(()=>this.executeGame())}stopGame(){cancelAnimationFrame(this.frameId);for(let t of this.leds)t.state&&(t.domElement.classList.remove("on"),t.domElement.classList.add("off"),t.state=!1)}}window.Emulator=r;
-},{"avr8js":"tbbQ","./intelhex":"rACS"}]},{},["HrFm"], null)
+// modules are defined as an array
+// [ module function, map of requires ]
+//
+// map of requires is short require name -> numeric require
+//
+// anything defined in a previous bundle is accessed via the
+// orig method which is the require for previous bundles
+parcelRequire = (function (modules, cache, entry, globalName) {
+  // Save the require from previous bundle to this closure if any
+  var previousRequire = typeof parcelRequire === 'function' && parcelRequire;
+  var nodeRequire = typeof require === 'function' && require;
+
+  function newRequire(name, jumped) {
+    if (!cache[name]) {
+      if (!modules[name]) {
+        // if we cannot find the module within our internal map or
+        // cache jump to the current global require ie. the last bundle
+        // that was added to the page.
+        var currentRequire = typeof parcelRequire === 'function' && parcelRequire;
+        if (!jumped && currentRequire) {
+          return currentRequire(name, true);
+        }
+
+        // If there are other bundles on this page the require from the
+        // previous one is saved to 'previousRequire'. Repeat this as
+        // many times as there are bundles until the module is found or
+        // we exhaust the require chain.
+        if (previousRequire) {
+          return previousRequire(name, true);
+        }
+
+        // Try the node require function if it exists.
+        if (nodeRequire && typeof name === 'string') {
+          return nodeRequire(name);
+        }
+
+        var err = new Error('Cannot find module \'' + name + '\'');
+        err.code = 'MODULE_NOT_FOUND';
+        throw err;
+      }
+
+      localRequire.resolve = resolve;
+      localRequire.cache = {};
+
+      var module = cache[name] = new newRequire.Module(name);
+
+      modules[name][0].call(module.exports, localRequire, module, module.exports, this);
+    }
+
+    return cache[name].exports;
+
+    function localRequire(x){
+      return newRequire(localRequire.resolve(x));
+    }
+
+    function resolve(x){
+      return modules[name][1][x] || x;
+    }
+  }
+
+  function Module(moduleName) {
+    this.id = moduleName;
+    this.bundle = newRequire;
+    this.exports = {};
+  }
+
+  newRequire.isParcelRequire = true;
+  newRequire.Module = Module;
+  newRequire.modules = modules;
+  newRequire.cache = cache;
+  newRequire.parent = previousRequire;
+  newRequire.register = function (id, exports) {
+    modules[id] = [function (require, module) {
+      module.exports = exports;
+    }, {}];
+  };
+
+  var error;
+  for (var i = 0; i < entry.length; i++) {
+    try {
+      newRequire(entry[i]);
+    } catch (e) {
+      // Save first error but execute all entries
+      if (!error) {
+        error = e;
+      }
+    }
+  }
+
+  if (entry.length) {
+    // Expose entry point to Node, AMD or browser globals
+    // Based on https://github.com/ForbesLindesay/umd/blob/master/template.js
+    var mainExports = newRequire(entry[entry.length - 1]);
+
+    // CommonJS
+    if (typeof exports === "object" && typeof module !== "undefined") {
+      module.exports = mainExports;
+
+    // RequireJS
+    } else if (typeof define === "function" && define.amd) {
+     define(function () {
+       return mainExports;
+     });
+
+    // <script>
+    } else if (globalName) {
+      this[globalName] = mainExports;
+    }
+  }
+
+  // Override the current require with this new one
+  parcelRequire = newRequire;
+
+  if (error) {
+    // throw error from earlier, _after updating parcelRequire_
+    throw error;
+  }
+
+  return newRequire;
+})({"../../node_modules/avr8js/dist/esm/cpu/interrupt.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.avrInterrupt = avrInterrupt;
+
+/**
+ * AVR-8 Interrupt Handling
+ * Part of AVR8js
+ * Reference: http://ww1.microchip.com/downloads/en/devicedoc/atmel-0856-avr-instruction-set-manual.pdf
+ *
+ * Copyright (C) 2019, Uri Shaked
+ */
+function avrInterrupt(cpu, addr) {
+  const sp = cpu.dataView.getUint16(93, true);
+  cpu.data[sp] = cpu.pc & 0xff;
+  cpu.data[sp - 1] = cpu.pc >> 8 & 0xff;
+
+  if (cpu.pc22Bits) {
+    cpu.data[sp - 2] = cpu.pc >> 16 & 0xff;
+  }
+
+  cpu.dataView.setUint16(93, sp - (cpu.pc22Bits ? 3 : 2), true);
+  cpu.data[95] &= 0x7f; // clear global interrupt flag
+
+  cpu.cycles += 2;
+  cpu.pc = addr;
+}
+},{}],"../../node_modules/avr8js/dist/esm/cpu/cpu.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.CPU = void 0;
+
+var _interrupt = require("./interrupt");
+
+/**
+ * AVR 8 CPU data structures
+ * Part of AVR8js
+ *
+ * Copyright (C) 2019, Uri Shaked
+ */
+const registerSpace = 0x100;
+
+class CPU {
+  constructor(progMem, sramBytes = 8192) {
+    this.progMem = progMem;
+    this.sramBytes = sramBytes;
+    this.data = new Uint8Array(this.sramBytes + registerSpace);
+    this.data16 = new Uint16Array(this.data.buffer);
+    this.dataView = new DataView(this.data.buffer);
+    this.progBytes = new Uint8Array(this.progMem.buffer);
+    this.readHooks = [];
+    this.writeHooks = [];
+    this.pendingInterrupts = [];
+    this.clockEvents = [];
+    this.pc22Bits = this.progBytes.length > 0x20000; // This lets the Timer Compare output override GPIO pins:
+
+    this.gpioTimerHooks = [];
+    this.pc = 0;
+    this.cycles = 0;
+    this.nextInterrupt = -1;
+    this.nextClockEvent = 0;
+    this.reset();
+  }
+
+  reset() {
+    this.data.fill(0);
+    this.SP = this.data.length - 1;
+    this.pendingInterrupts.splice(0, this.pendingInterrupts.length);
+    this.nextInterrupt = -1;
+  }
+
+  readData(addr) {
+    if (addr >= 32 && this.readHooks[addr]) {
+      return this.readHooks[addr](addr);
+    }
+
+    return this.data[addr];
+  }
+
+  writeData(addr, value) {
+    const hook = this.writeHooks[addr];
+
+    if (hook) {
+      if (hook(value, this.data[addr], addr)) {
+        return;
+      }
+    }
+
+    this.data[addr] = value;
+  }
+
+  get SP() {
+    return this.dataView.getUint16(93, true);
+  }
+
+  set SP(value) {
+    this.dataView.setUint16(93, value, true);
+  }
+
+  get SREG() {
+    return this.data[95];
+  }
+
+  get interruptsEnabled() {
+    return this.SREG & 0x80 ? true : false;
+  }
+
+  updateNextInterrupt() {
+    this.nextInterrupt = this.pendingInterrupts.findIndex(item => !!item);
+  }
+
+  setInterruptFlag(interrupt) {
+    const {
+      flagRegister,
+      flagMask,
+      enableRegister,
+      enableMask
+    } = interrupt;
+
+    if (interrupt.inverseFlag) {
+      this.data[flagRegister] &= ~flagMask;
+    } else {
+      this.data[flagRegister] |= flagMask;
+    }
+
+    if (this.data[enableRegister] & enableMask) {
+      this.queueInterrupt(interrupt);
+    }
+  }
+
+  updateInterruptEnable(interrupt, registerValue) {
+    const {
+      enableMask,
+      flagRegister,
+      flagMask
+    } = interrupt;
+
+    if (registerValue & enableMask) {
+      if (this.data[flagRegister] & flagMask) {
+        this.queueInterrupt(interrupt);
+      }
+    } else {
+      this.clearInterrupt(interrupt, false);
+    }
+  }
+
+  queueInterrupt(interrupt) {
+    this.pendingInterrupts[interrupt.address] = interrupt;
+    this.updateNextInterrupt();
+  }
+
+  clearInterrupt({
+    address,
+    flagRegister,
+    flagMask
+  }, clearFlag = true) {
+    delete this.pendingInterrupts[address];
+
+    if (clearFlag) {
+      this.data[flagRegister] &= ~flagMask;
+    }
+
+    this.updateNextInterrupt();
+  }
+
+  clearInterruptByFlag(interrupt, registerValue) {
+    const {
+      flagRegister,
+      flagMask
+    } = interrupt;
+
+    if (registerValue & flagMask) {
+      this.data[flagRegister] &= ~flagMask;
+      this.clearInterrupt(interrupt);
+    }
+  }
+
+  addClockEvent(callback, cycles) {
+    const entry = {
+      cycles: this.cycles + Math.max(1, cycles),
+      callback
+    }; // Add the new entry while keeping the array sorted
+
+    const {
+      clockEvents
+    } = this;
+
+    if (!clockEvents.length || clockEvents[clockEvents.length - 1].cycles <= entry.cycles) {
+      clockEvents.push(entry);
+    } else if (clockEvents[0].cycles >= entry.cycles) {
+      clockEvents.unshift(entry);
+    } else {
+      for (let i = 1; i < clockEvents.length; i++) {
+        if (clockEvents[i].cycles >= entry.cycles) {
+          clockEvents.splice(i, 0, entry);
+          break;
+        }
+      }
+    }
+
+    this.nextClockEvent = this.clockEvents[0].cycles;
+    return callback;
+  }
+
+  updateClockEvent(callback, cycles) {
+    if (this.clearClockEvent(callback)) {
+      this.addClockEvent(callback, cycles);
+      return true;
+    }
+
+    return false;
+  }
+
+  clearClockEvent(callback) {
+    var _a, _b;
+
+    const index = this.clockEvents.findIndex(item => item.callback === callback);
+
+    if (index >= 0) {
+      this.clockEvents.splice(index, 1);
+      this.nextClockEvent = (_b = (_a = this.clockEvents[0]) === null || _a === void 0 ? void 0 : _a.cycles) !== null && _b !== void 0 ? _b : 0;
+      return true;
+    }
+
+    return false;
+  }
+
+  tick() {
+    var _a, _b, _c;
+
+    const {
+      nextClockEvent,
+      clockEvents
+    } = this;
+
+    if (nextClockEvent && nextClockEvent <= this.cycles) {
+      (_a = clockEvents.shift()) === null || _a === void 0 ? void 0 : _a.callback();
+      this.nextClockEvent = (_c = (_b = clockEvents[0]) === null || _b === void 0 ? void 0 : _b.cycles) !== null && _c !== void 0 ? _c : 0;
+    }
+
+    const {
+      nextInterrupt
+    } = this;
+
+    if (this.interruptsEnabled && nextInterrupt >= 0) {
+      const interrupt = this.pendingInterrupts[nextInterrupt];
+      (0, _interrupt.avrInterrupt)(this, interrupt.address);
+
+      if (!interrupt.constant) {
+        this.clearInterrupt(interrupt);
+      }
+    }
+  }
+
+}
+
+exports.CPU = CPU;
+},{"./interrupt":"../../node_modules/avr8js/dist/esm/cpu/interrupt.js"}],"../../node_modules/avr8js/dist/esm/cpu/instruction.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.avrInstruction = avrInstruction;
+
+/**
+ * AVR-8 Instruction Simulation
+ * Part of AVR8js
+ *
+ * Reference: http://ww1.microchip.com/downloads/en/devicedoc/atmel-0856-avr-instruction-set-manual.pdf
+ *
+ * Instruction timing is currently based on ATmega328p (see the Instruction Set Summary at the end of
+ * the datasheet)
+ *
+ * Copyright (C) 2019, 2020 Uri Shaked
+ */
+function isTwoWordInstruction(opcode) {
+  return (
+    /* LDS */
+    (opcode & 0xfe0f) === 0x9000 ||
+    /* STS */
+    (opcode & 0xfe0f) === 0x9200 ||
+    /* CALL */
+    (opcode & 0xfe0e) === 0x940e ||
+    /* JMP */
+    (opcode & 0xfe0e) === 0x940c
+  );
+}
+
+function avrInstruction(cpu) {
+  const opcode = cpu.progMem[cpu.pc];
+
+  if ((opcode & 0xfc00) === 0x1c00) {
+    /* ADC, 0001 11rd dddd rrrr */
+    const d = cpu.data[(opcode & 0x1f0) >> 4];
+    const r = cpu.data[opcode & 0xf | (opcode & 0x200) >> 5];
+    const sum = d + r + (cpu.data[95] & 1);
+    const R = sum & 255;
+    cpu.data[(opcode & 0x1f0) >> 4] = R;
+    let sreg = cpu.data[95] & 0xc0;
+    sreg |= R ? 0 : 2;
+    sreg |= 128 & R ? 4 : 0;
+    sreg |= (R ^ r) & (d ^ R) & 128 ? 8 : 0;
+    sreg |= sreg >> 2 & 1 ^ sreg >> 3 & 1 ? 0x10 : 0;
+    sreg |= sum & 256 ? 1 : 0;
+    sreg |= 1 & (d & r | r & ~R | ~R & d) ? 0x20 : 0;
+    cpu.data[95] = sreg;
+  } else if ((opcode & 0xfc00) === 0xc00) {
+    /* ADD, 0000 11rd dddd rrrr */
+    const d = cpu.data[(opcode & 0x1f0) >> 4];
+    const r = cpu.data[opcode & 0xf | (opcode & 0x200) >> 5];
+    const R = d + r & 255;
+    cpu.data[(opcode & 0x1f0) >> 4] = R;
+    let sreg = cpu.data[95] & 0xc0;
+    sreg |= R ? 0 : 2;
+    sreg |= 128 & R ? 4 : 0;
+    sreg |= (R ^ r) & (R ^ d) & 128 ? 8 : 0;
+    sreg |= sreg >> 2 & 1 ^ sreg >> 3 & 1 ? 0x10 : 0;
+    sreg |= d + r & 256 ? 1 : 0;
+    sreg |= 1 & (d & r | r & ~R | ~R & d) ? 0x20 : 0;
+    cpu.data[95] = sreg;
+  } else if ((opcode & 0xff00) === 0x9600) {
+    /* ADIW, 1001 0110 KKdd KKKK */
+    const addr = 2 * ((opcode & 0x30) >> 4) + 24;
+    const value = cpu.dataView.getUint16(addr, true);
+    const R = value + (opcode & 0xf | (opcode & 0xc0) >> 2) & 0xffff;
+    cpu.dataView.setUint16(addr, R, true);
+    let sreg = cpu.data[95] & 0xe0;
+    sreg |= R ? 0 : 2;
+    sreg |= 0x8000 & R ? 4 : 0;
+    sreg |= ~value & R & 0x8000 ? 8 : 0;
+    sreg |= sreg >> 2 & 1 ^ sreg >> 3 & 1 ? 0x10 : 0;
+    sreg |= ~R & value & 0x8000 ? 1 : 0;
+    cpu.data[95] = sreg;
+    cpu.cycles++;
+  } else if ((opcode & 0xfc00) === 0x2000) {
+    /* AND, 0010 00rd dddd rrrr */
+    const R = cpu.data[(opcode & 0x1f0) >> 4] & cpu.data[opcode & 0xf | (opcode & 0x200) >> 5];
+    cpu.data[(opcode & 0x1f0) >> 4] = R;
+    let sreg = cpu.data[95] & 0xe1;
+    sreg |= R ? 0 : 2;
+    sreg |= 128 & R ? 4 : 0;
+    sreg |= sreg >> 2 & 1 ^ sreg >> 3 & 1 ? 0x10 : 0;
+    cpu.data[95] = sreg;
+  } else if ((opcode & 0xf000) === 0x7000) {
+    /* ANDI, 0111 KKKK dddd KKKK */
+    const R = cpu.data[((opcode & 0xf0) >> 4) + 16] & (opcode & 0xf | (opcode & 0xf00) >> 4);
+    cpu.data[((opcode & 0xf0) >> 4) + 16] = R;
+    let sreg = cpu.data[95] & 0xe1;
+    sreg |= R ? 0 : 2;
+    sreg |= 128 & R ? 4 : 0;
+    sreg |= sreg >> 2 & 1 ^ sreg >> 3 & 1 ? 0x10 : 0;
+    cpu.data[95] = sreg;
+  } else if ((opcode & 0xfe0f) === 0x9405) {
+    /* ASR, 1001 010d dddd 0101 */
+    const value = cpu.data[(opcode & 0x1f0) >> 4];
+    const R = value >>> 1 | 128 & value;
+    cpu.data[(opcode & 0x1f0) >> 4] = R;
+    let sreg = cpu.data[95] & 0xe0;
+    sreg |= R ? 0 : 2;
+    sreg |= 128 & R ? 4 : 0;
+    sreg |= value & 1;
+    sreg |= sreg >> 2 & 1 ^ sreg & 1 ? 8 : 0;
+    sreg |= sreg >> 2 & 1 ^ sreg >> 3 & 1 ? 0x10 : 0;
+    cpu.data[95] = sreg;
+  } else if ((opcode & 0xff8f) === 0x9488) {
+    /* BCLR, 1001 0100 1sss 1000 */
+    cpu.data[95] &= ~(1 << ((opcode & 0x70) >> 4));
+  } else if ((opcode & 0xfe08) === 0xf800) {
+    /* BLD, 1111 100d dddd 0bbb */
+    const b = opcode & 7;
+    const d = (opcode & 0x1f0) >> 4;
+    cpu.data[d] = ~(1 << b) & cpu.data[d] | (cpu.data[95] >> 6 & 1) << b;
+  } else if ((opcode & 0xfc00) === 0xf400) {
+    /* BRBC, 1111 01kk kkkk ksss */
+    if (!(cpu.data[95] & 1 << (opcode & 7))) {
+      cpu.pc = cpu.pc + (((opcode & 0x1f8) >> 3) - (opcode & 0x200 ? 0x40 : 0));
+      cpu.cycles++;
+    }
+  } else if ((opcode & 0xfc00) === 0xf000) {
+    /* BRBS, 1111 00kk kkkk ksss */
+    if (cpu.data[95] & 1 << (opcode & 7)) {
+      cpu.pc = cpu.pc + (((opcode & 0x1f8) >> 3) - (opcode & 0x200 ? 0x40 : 0));
+      cpu.cycles++;
+    }
+  } else if ((opcode & 0xff8f) === 0x9408) {
+    /* BSET, 1001 0100 0sss 1000 */
+    cpu.data[95] |= 1 << ((opcode & 0x70) >> 4);
+  } else if ((opcode & 0xfe08) === 0xfa00) {
+    /* BST, 1111 101d dddd 0bbb */
+    const d = cpu.data[(opcode & 0x1f0) >> 4];
+    const b = opcode & 7;
+    cpu.data[95] = cpu.data[95] & 0xbf | (d >> b & 1 ? 0x40 : 0);
+  } else if ((opcode & 0xfe0e) === 0x940e) {
+    /* CALL, 1001 010k kkkk 111k kkkk kkkk kkkk kkkk */
+    const k = cpu.progMem[cpu.pc + 1] | (opcode & 1) << 16 | (opcode & 0x1f0) << 13;
+    const ret = cpu.pc + 2;
+    const sp = cpu.dataView.getUint16(93, true);
+    const {
+      pc22Bits
+    } = cpu;
+    cpu.data[sp] = 255 & ret;
+    cpu.data[sp - 1] = ret >> 8 & 255;
+
+    if (pc22Bits) {
+      cpu.data[sp - 2] = ret >> 16 & 255;
+    }
+
+    cpu.dataView.setUint16(93, sp - (pc22Bits ? 3 : 2), true);
+    cpu.pc = k - 1;
+    cpu.cycles += pc22Bits ? 4 : 3;
+  } else if ((opcode & 0xff00) === 0x9800) {
+    /* CBI, 1001 1000 AAAA Abbb */
+    const A = opcode & 0xf8;
+    const b = opcode & 7;
+    const R = cpu.readData((A >> 3) + 32);
+    cpu.writeData((A >> 3) + 32, R & ~(1 << b));
+  } else if ((opcode & 0xfe0f) === 0x9400) {
+    /* COM, 1001 010d dddd 0000 */
+    const d = (opcode & 0x1f0) >> 4;
+    const R = 255 - cpu.data[d];
+    cpu.data[d] = R;
+    let sreg = cpu.data[95] & 0xe1 | 1;
+    sreg |= R ? 0 : 2;
+    sreg |= 128 & R ? 4 : 0;
+    sreg |= sreg >> 2 & 1 ^ sreg >> 3 & 1 ? 0x10 : 0;
+    cpu.data[95] = sreg;
+  } else if ((opcode & 0xfc00) === 0x1400) {
+    /* CP, 0001 01rd dddd rrrr */
+    const val1 = cpu.data[(opcode & 0x1f0) >> 4];
+    const val2 = cpu.data[opcode & 0xf | (opcode & 0x200) >> 5];
+    const R = val1 - val2;
+    let sreg = cpu.data[95] & 0xc0;
+    sreg |= R ? 0 : 2;
+    sreg |= 128 & R ? 4 : 0;
+    sreg |= 0 !== ((val1 ^ val2) & (val1 ^ R) & 128) ? 8 : 0;
+    sreg |= sreg >> 2 & 1 ^ sreg >> 3 & 1 ? 0x10 : 0;
+    sreg |= val2 > val1 ? 1 : 0;
+    sreg |= 1 & (~val1 & val2 | val2 & R | R & ~val1) ? 0x20 : 0;
+    cpu.data[95] = sreg;
+  } else if ((opcode & 0xfc00) === 0x400) {
+    /* CPC, 0000 01rd dddd rrrr */
+    const arg1 = cpu.data[(opcode & 0x1f0) >> 4];
+    const arg2 = cpu.data[opcode & 0xf | (opcode & 0x200) >> 5];
+    let sreg = cpu.data[95];
+    const r = arg1 - arg2 - (sreg & 1);
+    sreg = sreg & 0xc0 | (!r && sreg >> 1 & 1 ? 2 : 0) | (arg2 + (sreg & 1) > arg1 ? 1 : 0);
+    sreg |= 128 & r ? 4 : 0;
+    sreg |= (arg1 ^ arg2) & (arg1 ^ r) & 128 ? 8 : 0;
+    sreg |= sreg >> 2 & 1 ^ sreg >> 3 & 1 ? 0x10 : 0;
+    sreg |= 1 & (~arg1 & arg2 | arg2 & r | r & ~arg1) ? 0x20 : 0;
+    cpu.data[95] = sreg;
+  } else if ((opcode & 0xf000) === 0x3000) {
+    /* CPI, 0011 KKKK dddd KKKK */
+    const arg1 = cpu.data[((opcode & 0xf0) >> 4) + 16];
+    const arg2 = opcode & 0xf | (opcode & 0xf00) >> 4;
+    const r = arg1 - arg2;
+    let sreg = cpu.data[95] & 0xc0;
+    sreg |= r ? 0 : 2;
+    sreg |= 128 & r ? 4 : 0;
+    sreg |= (arg1 ^ arg2) & (arg1 ^ r) & 128 ? 8 : 0;
+    sreg |= sreg >> 2 & 1 ^ sreg >> 3 & 1 ? 0x10 : 0;
+    sreg |= arg2 > arg1 ? 1 : 0;
+    sreg |= 1 & (~arg1 & arg2 | arg2 & r | r & ~arg1) ? 0x20 : 0;
+    cpu.data[95] = sreg;
+  } else if ((opcode & 0xfc00) === 0x1000) {
+    /* CPSE, 0001 00rd dddd rrrr */
+    if (cpu.data[(opcode & 0x1f0) >> 4] === cpu.data[opcode & 0xf | (opcode & 0x200) >> 5]) {
+      const nextOpcode = cpu.progMem[cpu.pc + 1];
+      const skipSize = isTwoWordInstruction(nextOpcode) ? 2 : 1;
+      cpu.pc += skipSize;
+      cpu.cycles += skipSize;
+    }
+  } else if ((opcode & 0xfe0f) === 0x940a) {
+    /* DEC, 1001 010d dddd 1010 */
+    const value = cpu.data[(opcode & 0x1f0) >> 4];
+    const R = value - 1;
+    cpu.data[(opcode & 0x1f0) >> 4] = R;
+    let sreg = cpu.data[95] & 0xe1;
+    sreg |= R ? 0 : 2;
+    sreg |= 128 & R ? 4 : 0;
+    sreg |= 128 === value ? 8 : 0;
+    sreg |= sreg >> 2 & 1 ^ sreg >> 3 & 1 ? 0x10 : 0;
+    cpu.data[95] = sreg;
+  } else if (opcode === 0x9519) {
+    /* EICALL, 1001 0101 0001 1001 */
+    const retAddr = cpu.pc + 1;
+    const sp = cpu.dataView.getUint16(93, true);
+    const eind = cpu.data[0x5c];
+    cpu.data[sp] = retAddr & 255;
+    cpu.data[sp - 1] = retAddr >> 8 & 255;
+    cpu.data[sp - 2] = retAddr >> 16 & 255;
+    cpu.dataView.setUint16(93, sp - 3, true);
+    cpu.pc = (eind << 16 | cpu.dataView.getUint16(30, true)) - 1;
+    cpu.cycles += 3;
+  } else if (opcode === 0x9419) {
+    /* EIJMP, 1001 0100 0001 1001 */
+    const eind = cpu.data[0x5c];
+    cpu.pc = (eind << 16 | cpu.dataView.getUint16(30, true)) - 1;
+    cpu.cycles++;
+  } else if (opcode === 0x95d8) {
+    /* ELPM, 1001 0101 1101 1000 */
+    const rampz = cpu.data[0x5b];
+    cpu.data[0] = cpu.progBytes[rampz << 16 | cpu.dataView.getUint16(30, true)];
+    cpu.cycles += 2;
+  } else if ((opcode & 0xfe0f) === 0x9006) {
+    /* ELPM(REG), 1001 000d dddd 0110 */
+    const rampz = cpu.data[0x5b];
+    cpu.data[(opcode & 0x1f0) >> 4] = cpu.progBytes[rampz << 16 | cpu.dataView.getUint16(30, true)];
+    cpu.cycles += 2;
+  } else if ((opcode & 0xfe0f) === 0x9007) {
+    /* ELPM(INC), 1001 000d dddd 0111 */
+    const rampz = cpu.data[0x5b];
+    const i = cpu.dataView.getUint16(30, true);
+    cpu.data[(opcode & 0x1f0) >> 4] = cpu.progBytes[rampz << 16 | i];
+    cpu.dataView.setUint16(30, i + 1, true);
+
+    if (i === 0xffff) {
+      cpu.data[0x5b] = (rampz + 1) % (cpu.progBytes.length >> 16);
+    }
+
+    cpu.cycles += 2;
+  } else if ((opcode & 0xfc00) === 0x2400) {
+    /* EOR, 0010 01rd dddd rrrr */
+    const R = cpu.data[(opcode & 0x1f0) >> 4] ^ cpu.data[opcode & 0xf | (opcode & 0x200) >> 5];
+    cpu.data[(opcode & 0x1f0) >> 4] = R;
+    let sreg = cpu.data[95] & 0xe1;
+    sreg |= R ? 0 : 2;
+    sreg |= 128 & R ? 4 : 0;
+    sreg |= sreg >> 2 & 1 ^ sreg >> 3 & 1 ? 0x10 : 0;
+    cpu.data[95] = sreg;
+  } else if ((opcode & 0xff88) === 0x308) {
+    /* FMUL, 0000 0011 0ddd 1rrr */
+    const v1 = cpu.data[((opcode & 0x70) >> 4) + 16];
+    const v2 = cpu.data[(opcode & 7) + 16];
+    const R = v1 * v2 << 1;
+    cpu.dataView.setUint16(0, R, true);
+    cpu.data[95] = cpu.data[95] & 0xfc | (0xffff & R ? 0 : 2) | (v1 * v2 & 0x8000 ? 1 : 0);
+    cpu.cycles++;
+  } else if ((opcode & 0xff88) === 0x380) {
+    /* FMULS, 0000 0011 1ddd 0rrr */
+    const v1 = cpu.dataView.getInt8(((opcode & 0x70) >> 4) + 16);
+    const v2 = cpu.dataView.getInt8((opcode & 7) + 16);
+    const R = v1 * v2 << 1;
+    cpu.dataView.setInt16(0, R, true);
+    cpu.data[95] = cpu.data[95] & 0xfc | (0xffff & R ? 0 : 2) | (v1 * v2 & 0x8000 ? 1 : 0);
+    cpu.cycles++;
+  } else if ((opcode & 0xff88) === 0x388) {
+    /* FMULSU, 0000 0011 1ddd 1rrr */
+    const v1 = cpu.dataView.getInt8(((opcode & 0x70) >> 4) + 16);
+    const v2 = cpu.data[(opcode & 7) + 16];
+    const R = v1 * v2 << 1;
+    cpu.dataView.setInt16(0, R, true);
+    cpu.data[95] = cpu.data[95] & 0xfc | (0xffff & R ? 2 : 0) | (v1 * v2 & 0x8000 ? 1 : 0);
+    cpu.cycles++;
+  } else if (opcode === 0x9509) {
+    /* ICALL, 1001 0101 0000 1001 */
+    const retAddr = cpu.pc + 1;
+    const sp = cpu.dataView.getUint16(93, true);
+    const {
+      pc22Bits
+    } = cpu;
+    cpu.data[sp] = retAddr & 255;
+    cpu.data[sp - 1] = retAddr >> 8 & 255;
+
+    if (pc22Bits) {
+      cpu.data[sp - 2] = retAddr >> 16 & 255;
+    }
+
+    cpu.dataView.setUint16(93, sp - (pc22Bits ? 3 : 2), true);
+    cpu.pc = cpu.dataView.getUint16(30, true) - 1;
+    cpu.cycles += pc22Bits ? 3 : 2;
+  } else if (opcode === 0x9409) {
+    /* IJMP, 1001 0100 0000 1001 */
+    cpu.pc = cpu.dataView.getUint16(30, true) - 1;
+    cpu.cycles++;
+  } else if ((opcode & 0xf800) === 0xb000) {
+    /* IN, 1011 0AAd dddd AAAA */
+    const i = cpu.readData((opcode & 0xf | (opcode & 0x600) >> 5) + 32);
+    cpu.data[(opcode & 0x1f0) >> 4] = i;
+  } else if ((opcode & 0xfe0f) === 0x9403) {
+    /* INC, 1001 010d dddd 0011 */
+    const d = cpu.data[(opcode & 0x1f0) >> 4];
+    const r = d + 1 & 255;
+    cpu.data[(opcode & 0x1f0) >> 4] = r;
+    let sreg = cpu.data[95] & 0xe1;
+    sreg |= r ? 0 : 2;
+    sreg |= 128 & r ? 4 : 0;
+    sreg |= 127 === d ? 8 : 0;
+    sreg |= sreg >> 2 & 1 ^ sreg >> 3 & 1 ? 0x10 : 0;
+    cpu.data[95] = sreg;
+  } else if ((opcode & 0xfe0e) === 0x940c) {
+    /* JMP, 1001 010k kkkk 110k kkkk kkkk kkkk kkkk */
+    cpu.pc = (cpu.progMem[cpu.pc + 1] | (opcode & 1) << 16 | (opcode & 0x1f0) << 13) - 1;
+    cpu.cycles += 2;
+  } else if ((opcode & 0xfe0f) === 0x9206) {
+    /* LAC, 1001 001r rrrr 0110 */
+    const r = (opcode & 0x1f0) >> 4;
+    const clear = cpu.data[r];
+    const value = cpu.readData(cpu.dataView.getUint16(30, true));
+    cpu.writeData(cpu.dataView.getUint16(30, true), value & 255 - clear);
+    cpu.data[r] = value;
+  } else if ((opcode & 0xfe0f) === 0x9205) {
+    /* LAS, 1001 001r rrrr 0101 */
+    const r = (opcode & 0x1f0) >> 4;
+    const set = cpu.data[r];
+    const value = cpu.readData(cpu.dataView.getUint16(30, true));
+    cpu.writeData(cpu.dataView.getUint16(30, true), value | set);
+    cpu.data[r] = value;
+  } else if ((opcode & 0xfe0f) === 0x9207) {
+    /* LAT, 1001 001r rrrr 0111 */
+    const r = cpu.data[(opcode & 0x1f0) >> 4];
+    const R = cpu.readData(cpu.dataView.getUint16(30, true));
+    cpu.writeData(cpu.dataView.getUint16(30, true), r ^ R);
+    cpu.data[(opcode & 0x1f0) >> 4] = R;
+  } else if ((opcode & 0xf000) === 0xe000) {
+    /* LDI, 1110 KKKK dddd KKKK */
+    cpu.data[((opcode & 0xf0) >> 4) + 16] = opcode & 0xf | (opcode & 0xf00) >> 4;
+  } else if ((opcode & 0xfe0f) === 0x9000) {
+    /* LDS, 1001 000d dddd 0000 kkkk kkkk kkkk kkkk */
+    cpu.cycles++;
+    const value = cpu.readData(cpu.progMem[cpu.pc + 1]);
+    cpu.data[(opcode & 0x1f0) >> 4] = value;
+    cpu.pc++;
+  } else if ((opcode & 0xfe0f) === 0x900c) {
+    /* LDX, 1001 000d dddd 1100 */
+    cpu.cycles++;
+    cpu.data[(opcode & 0x1f0) >> 4] = cpu.readData(cpu.dataView.getUint16(26, true));
+  } else if ((opcode & 0xfe0f) === 0x900d) {
+    /* LDX(INC), 1001 000d dddd 1101 */
+    const x = cpu.dataView.getUint16(26, true);
+    cpu.cycles++;
+    cpu.data[(opcode & 0x1f0) >> 4] = cpu.readData(x);
+    cpu.dataView.setUint16(26, x + 1, true);
+  } else if ((opcode & 0xfe0f) === 0x900e) {
+    /* LDX(DEC), 1001 000d dddd 1110 */
+    const x = cpu.dataView.getUint16(26, true) - 1;
+    cpu.dataView.setUint16(26, x, true);
+    cpu.cycles++;
+    cpu.data[(opcode & 0x1f0) >> 4] = cpu.readData(x);
+  } else if ((opcode & 0xfe0f) === 0x8008) {
+    /* LDY, 1000 000d dddd 1000 */
+    cpu.cycles++;
+    cpu.data[(opcode & 0x1f0) >> 4] = cpu.readData(cpu.dataView.getUint16(28, true));
+  } else if ((opcode & 0xfe0f) === 0x9009) {
+    /* LDY(INC), 1001 000d dddd 1001 */
+    const y = cpu.dataView.getUint16(28, true);
+    cpu.cycles++;
+    cpu.data[(opcode & 0x1f0) >> 4] = cpu.readData(y);
+    cpu.dataView.setUint16(28, y + 1, true);
+  } else if ((opcode & 0xfe0f) === 0x900a) {
+    /* LDY(DEC), 1001 000d dddd 1010 */
+    const y = cpu.dataView.getUint16(28, true) - 1;
+    cpu.dataView.setUint16(28, y, true);
+    cpu.cycles++;
+    cpu.data[(opcode & 0x1f0) >> 4] = cpu.readData(y);
+  } else if ((opcode & 0xd208) === 0x8008 && opcode & 7 | (opcode & 0xc00) >> 7 | (opcode & 0x2000) >> 8) {
+    /* LDDY, 10q0 qq0d dddd 1qqq */
+    cpu.cycles++;
+    cpu.data[(opcode & 0x1f0) >> 4] = cpu.readData(cpu.dataView.getUint16(28, true) + (opcode & 7 | (opcode & 0xc00) >> 7 | (opcode & 0x2000) >> 8));
+  } else if ((opcode & 0xfe0f) === 0x8000) {
+    /* LDZ, 1000 000d dddd 0000 */
+    cpu.cycles++;
+    cpu.data[(opcode & 0x1f0) >> 4] = cpu.readData(cpu.dataView.getUint16(30, true));
+  } else if ((opcode & 0xfe0f) === 0x9001) {
+    /* LDZ(INC), 1001 000d dddd 0001 */
+    const z = cpu.dataView.getUint16(30, true);
+    cpu.cycles++;
+    cpu.data[(opcode & 0x1f0) >> 4] = cpu.readData(z);
+    cpu.dataView.setUint16(30, z + 1, true);
+  } else if ((opcode & 0xfe0f) === 0x9002) {
+    /* LDZ(DEC), 1001 000d dddd 0010 */
+    const z = cpu.dataView.getUint16(30, true) - 1;
+    cpu.dataView.setUint16(30, z, true);
+    cpu.cycles++;
+    cpu.data[(opcode & 0x1f0) >> 4] = cpu.readData(z);
+  } else if ((opcode & 0xd208) === 0x8000 && opcode & 7 | (opcode & 0xc00) >> 7 | (opcode & 0x2000) >> 8) {
+    /* LDDZ, 10q0 qq0d dddd 0qqq */
+    cpu.cycles++;
+    cpu.data[(opcode & 0x1f0) >> 4] = cpu.readData(cpu.dataView.getUint16(30, true) + (opcode & 7 | (opcode & 0xc00) >> 7 | (opcode & 0x2000) >> 8));
+  } else if (opcode === 0x95c8) {
+    /* LPM, 1001 0101 1100 1000 */
+    cpu.data[0] = cpu.progBytes[cpu.dataView.getUint16(30, true)];
+    cpu.cycles += 2;
+  } else if ((opcode & 0xfe0f) === 0x9004) {
+    /* LPM(REG), 1001 000d dddd 0100 */
+    cpu.data[(opcode & 0x1f0) >> 4] = cpu.progBytes[cpu.dataView.getUint16(30, true)];
+    cpu.cycles += 2;
+  } else if ((opcode & 0xfe0f) === 0x9005) {
+    /* LPM(INC), 1001 000d dddd 0101 */
+    const i = cpu.dataView.getUint16(30, true);
+    cpu.data[(opcode & 0x1f0) >> 4] = cpu.progBytes[i];
+    cpu.dataView.setUint16(30, i + 1, true);
+    cpu.cycles += 2;
+  } else if ((opcode & 0xfe0f) === 0x9406) {
+    /* LSR, 1001 010d dddd 0110 */
+    const value = cpu.data[(opcode & 0x1f0) >> 4];
+    const R = value >>> 1;
+    cpu.data[(opcode & 0x1f0) >> 4] = R;
+    let sreg = cpu.data[95] & 0xe0;
+    sreg |= R ? 0 : 2;
+    sreg |= value & 1;
+    sreg |= sreg >> 2 & 1 ^ sreg & 1 ? 8 : 0;
+    sreg |= sreg >> 2 & 1 ^ sreg >> 3 & 1 ? 0x10 : 0;
+    cpu.data[95] = sreg;
+  } else if ((opcode & 0xfc00) === 0x2c00) {
+    /* MOV, 0010 11rd dddd rrrr */
+    cpu.data[(opcode & 0x1f0) >> 4] = cpu.data[opcode & 0xf | (opcode & 0x200) >> 5];
+  } else if ((opcode & 0xff00) === 0x100) {
+    /* MOVW, 0000 0001 dddd rrrr */
+    const r2 = 2 * (opcode & 0xf);
+    const d2 = 2 * ((opcode & 0xf0) >> 4);
+    cpu.data[d2] = cpu.data[r2];
+    cpu.data[d2 + 1] = cpu.data[r2 + 1];
+  } else if ((opcode & 0xfc00) === 0x9c00) {
+    /* MUL, 1001 11rd dddd rrrr */
+    const R = cpu.data[(opcode & 0x1f0) >> 4] * cpu.data[opcode & 0xf | (opcode & 0x200) >> 5];
+    cpu.dataView.setUint16(0, R, true);
+    cpu.data[95] = cpu.data[95] & 0xfc | (0xffff & R ? 0 : 2) | (0x8000 & R ? 1 : 0);
+    cpu.cycles++;
+  } else if ((opcode & 0xff00) === 0x200) {
+    /* MULS, 0000 0010 dddd rrrr */
+    const R = cpu.dataView.getInt8(((opcode & 0xf0) >> 4) + 16) * cpu.dataView.getInt8((opcode & 0xf) + 16);
+    cpu.dataView.setInt16(0, R, true);
+    cpu.data[95] = cpu.data[95] & 0xfc | (0xffff & R ? 0 : 2) | (0x8000 & R ? 1 : 0);
+    cpu.cycles++;
+  } else if ((opcode & 0xff88) === 0x300) {
+    /* MULSU, 0000 0011 0ddd 0rrr */
+    const R = cpu.dataView.getInt8(((opcode & 0x70) >> 4) + 16) * cpu.data[(opcode & 7) + 16];
+    cpu.dataView.setInt16(0, R, true);
+    cpu.data[95] = cpu.data[95] & 0xfc | (0xffff & R ? 0 : 2) | (0x8000 & R ? 1 : 0);
+    cpu.cycles++;
+  } else if ((opcode & 0xfe0f) === 0x9401) {
+    /* NEG, 1001 010d dddd 0001 */
+    const d = (opcode & 0x1f0) >> 4;
+    const value = cpu.data[d];
+    const R = 0 - value;
+    cpu.data[d] = R;
+    let sreg = cpu.data[95] & 0xc0;
+    sreg |= R ? 0 : 2;
+    sreg |= 128 & R ? 4 : 0;
+    sreg |= 128 === R ? 8 : 0;
+    sreg |= sreg >> 2 & 1 ^ sreg >> 3 & 1 ? 0x10 : 0;
+    sreg |= R ? 1 : 0;
+    sreg |= 1 & (R | value) ? 0x20 : 0;
+    cpu.data[95] = sreg;
+  } else if (opcode === 0) {
+    /* NOP, 0000 0000 0000 0000 */
+
+    /* NOP */
+  } else if ((opcode & 0xfc00) === 0x2800) {
+    /* OR, 0010 10rd dddd rrrr */
+    const R = cpu.data[(opcode & 0x1f0) >> 4] | cpu.data[opcode & 0xf | (opcode & 0x200) >> 5];
+    cpu.data[(opcode & 0x1f0) >> 4] = R;
+    let sreg = cpu.data[95] & 0xe1;
+    sreg |= R ? 0 : 2;
+    sreg |= 128 & R ? 4 : 0;
+    sreg |= sreg >> 2 & 1 ^ sreg >> 3 & 1 ? 0x10 : 0;
+    cpu.data[95] = sreg;
+  } else if ((opcode & 0xf000) === 0x6000) {
+    /* SBR, 0110 KKKK dddd KKKK */
+    const R = cpu.data[((opcode & 0xf0) >> 4) + 16] | (opcode & 0xf | (opcode & 0xf00) >> 4);
+    cpu.data[((opcode & 0xf0) >> 4) + 16] = R;
+    let sreg = cpu.data[95] & 0xe1;
+    sreg |= R ? 0 : 2;
+    sreg |= 128 & R ? 4 : 0;
+    sreg |= sreg >> 2 & 1 ^ sreg >> 3 & 1 ? 0x10 : 0;
+    cpu.data[95] = sreg;
+  } else if ((opcode & 0xf800) === 0xb800) {
+    /* OUT, 1011 1AAr rrrr AAAA */
+    cpu.writeData((opcode & 0xf | (opcode & 0x600) >> 5) + 32, cpu.data[(opcode & 0x1f0) >> 4]);
+  } else if ((opcode & 0xfe0f) === 0x900f) {
+    /* POP, 1001 000d dddd 1111 */
+    const value = cpu.dataView.getUint16(93, true) + 1;
+    cpu.dataView.setUint16(93, value, true);
+    cpu.data[(opcode & 0x1f0) >> 4] = cpu.data[value];
+    cpu.cycles++;
+  } else if ((opcode & 0xfe0f) === 0x920f) {
+    /* PUSH, 1001 001d dddd 1111 */
+    const value = cpu.dataView.getUint16(93, true);
+    cpu.data[value] = cpu.data[(opcode & 0x1f0) >> 4];
+    cpu.dataView.setUint16(93, value - 1, true);
+    cpu.cycles++;
+  } else if ((opcode & 0xf000) === 0xd000) {
+    /* RCALL, 1101 kkkk kkkk kkkk */
+    const k = (opcode & 0x7ff) - (opcode & 0x800 ? 0x800 : 0);
+    const retAddr = cpu.pc + 1;
+    const sp = cpu.dataView.getUint16(93, true);
+    const {
+      pc22Bits
+    } = cpu;
+    cpu.data[sp] = 255 & retAddr;
+    cpu.data[sp - 1] = retAddr >> 8 & 255;
+
+    if (pc22Bits) {
+      cpu.data[sp - 2] = retAddr >> 16 & 255;
+    }
+
+    cpu.dataView.setUint16(93, sp - (pc22Bits ? 3 : 2), true);
+    cpu.pc += k;
+    cpu.cycles += pc22Bits ? 3 : 2;
+  } else if (opcode === 0x9508) {
+    /* RET, 1001 0101 0000 1000 */
+    const {
+      pc22Bits
+    } = cpu;
+    const i = cpu.dataView.getUint16(93, true) + (pc22Bits ? 3 : 2);
+    cpu.dataView.setUint16(93, i, true);
+    cpu.pc = (cpu.data[i - 1] << 8) + cpu.data[i] - 1;
+
+    if (pc22Bits) {
+      cpu.pc |= cpu.data[i - 2] << 16;
+    }
+
+    cpu.cycles += pc22Bits ? 4 : 3;
+  } else if (opcode === 0x9518) {
+    /* RETI, 1001 0101 0001 1000 */
+    const {
+      pc22Bits
+    } = cpu;
+    const i = cpu.dataView.getUint16(93, true) + (pc22Bits ? 3 : 2);
+    cpu.dataView.setUint16(93, i, true);
+    cpu.pc = (cpu.data[i - 1] << 8) + cpu.data[i] - 1;
+
+    if (pc22Bits) {
+      cpu.pc |= cpu.data[i - 2] << 16;
+    }
+
+    cpu.cycles += pc22Bits ? 4 : 3;
+    cpu.data[95] |= 0x80; // Enable interrupts
+  } else if ((opcode & 0xf000) === 0xc000) {
+    /* RJMP, 1100 kkkk kkkk kkkk */
+    cpu.pc = cpu.pc + ((opcode & 0x7ff) - (opcode & 0x800 ? 0x800 : 0));
+    cpu.cycles++;
+  } else if ((opcode & 0xfe0f) === 0x9407) {
+    /* ROR, 1001 010d dddd 0111 */
+    const d = cpu.data[(opcode & 0x1f0) >> 4];
+    const r = d >>> 1 | (cpu.data[95] & 1) << 7;
+    cpu.data[(opcode & 0x1f0) >> 4] = r;
+    let sreg = cpu.data[95] & 0xe0;
+    sreg |= r ? 0 : 2;
+    sreg |= 128 & r ? 4 : 0;
+    sreg |= 1 & d ? 1 : 0;
+    sreg |= sreg >> 2 & 1 ^ sreg & 1 ? 8 : 0;
+    sreg |= sreg >> 2 & 1 ^ sreg >> 3 & 1 ? 0x10 : 0;
+    cpu.data[95] = sreg;
+  } else if ((opcode & 0xfc00) === 0x800) {
+    /* SBC, 0000 10rd dddd rrrr */
+    const val1 = cpu.data[(opcode & 0x1f0) >> 4];
+    const val2 = cpu.data[opcode & 0xf | (opcode & 0x200) >> 5];
+    let sreg = cpu.data[95];
+    const R = val1 - val2 - (sreg & 1);
+    cpu.data[(opcode & 0x1f0) >> 4] = R;
+    sreg = sreg & 0xc0 | (!R && sreg >> 1 & 1 ? 2 : 0) | (val2 + (sreg & 1) > val1 ? 1 : 0);
+    sreg |= 128 & R ? 4 : 0;
+    sreg |= (val1 ^ val2) & (val1 ^ R) & 128 ? 8 : 0;
+    sreg |= sreg >> 2 & 1 ^ sreg >> 3 & 1 ? 0x10 : 0;
+    sreg |= 1 & (~val1 & val2 | val2 & R | R & ~val1) ? 0x20 : 0;
+    cpu.data[95] = sreg;
+  } else if ((opcode & 0xf000) === 0x4000) {
+    /* SBCI, 0100 KKKK dddd KKKK */
+    const val1 = cpu.data[((opcode & 0xf0) >> 4) + 16];
+    const val2 = opcode & 0xf | (opcode & 0xf00) >> 4;
+    let sreg = cpu.data[95];
+    const R = val1 - val2 - (sreg & 1);
+    cpu.data[((opcode & 0xf0) >> 4) + 16] = R;
+    sreg = sreg & 0xc0 | (!R && sreg >> 1 & 1 ? 2 : 0) | (val2 + (sreg & 1) > val1 ? 1 : 0);
+    sreg |= 128 & R ? 4 : 0;
+    sreg |= (val1 ^ val2) & (val1 ^ R) & 128 ? 8 : 0;
+    sreg |= sreg >> 2 & 1 ^ sreg >> 3 & 1 ? 0x10 : 0;
+    sreg |= 1 & (~val1 & val2 | val2 & R | R & ~val1) ? 0x20 : 0;
+    cpu.data[95] = sreg;
+  } else if ((opcode & 0xff00) === 0x9a00) {
+    /* SBI, 1001 1010 AAAA Abbb */
+    const target = ((opcode & 0xf8) >> 3) + 32;
+    cpu.writeData(target, cpu.readData(target) | 1 << (opcode & 7));
+    cpu.cycles++;
+  } else if ((opcode & 0xff00) === 0x9900) {
+    /* SBIC, 1001 1001 AAAA Abbb */
+    const value = cpu.readData(((opcode & 0xf8) >> 3) + 32);
+
+    if (!(value & 1 << (opcode & 7))) {
+      const nextOpcode = cpu.progMem[cpu.pc + 1];
+      const skipSize = isTwoWordInstruction(nextOpcode) ? 2 : 1;
+      cpu.cycles += skipSize;
+      cpu.pc += skipSize;
+    }
+  } else if ((opcode & 0xff00) === 0x9b00) {
+    /* SBIS, 1001 1011 AAAA Abbb */
+    const value = cpu.readData(((opcode & 0xf8) >> 3) + 32);
+
+    if (value & 1 << (opcode & 7)) {
+      const nextOpcode = cpu.progMem[cpu.pc + 1];
+      const skipSize = isTwoWordInstruction(nextOpcode) ? 2 : 1;
+      cpu.cycles += skipSize;
+      cpu.pc += skipSize;
+    }
+  } else if ((opcode & 0xff00) === 0x9700) {
+    /* SBIW, 1001 0111 KKdd KKKK */
+    const i = 2 * ((opcode & 0x30) >> 4) + 24;
+    const a = cpu.dataView.getUint16(i, true);
+    const l = opcode & 0xf | (opcode & 0xc0) >> 2;
+    const R = a - l;
+    cpu.dataView.setUint16(i, R, true);
+    let sreg = cpu.data[95] & 0xc0;
+    sreg |= R ? 0 : 2;
+    sreg |= 0x8000 & R ? 4 : 0;
+    sreg |= a & ~R & 0x8000 ? 8 : 0;
+    sreg |= sreg >> 2 & 1 ^ sreg >> 3 & 1 ? 0x10 : 0;
+    sreg |= l > a ? 1 : 0;
+    sreg |= 1 & (~a & l | l & R | R & ~a) ? 0x20 : 0;
+    cpu.data[95] = sreg;
+    cpu.cycles++;
+  } else if ((opcode & 0xfe08) === 0xfc00) {
+    /* SBRC, 1111 110r rrrr 0bbb */
+    if (!(cpu.data[(opcode & 0x1f0) >> 4] & 1 << (opcode & 7))) {
+      const nextOpcode = cpu.progMem[cpu.pc + 1];
+      const skipSize = isTwoWordInstruction(nextOpcode) ? 2 : 1;
+      cpu.cycles += skipSize;
+      cpu.pc += skipSize;
+    }
+  } else if ((opcode & 0xfe08) === 0xfe00) {
+    /* SBRS, 1111 111r rrrr 0bbb */
+    if (cpu.data[(opcode & 0x1f0) >> 4] & 1 << (opcode & 7)) {
+      const nextOpcode = cpu.progMem[cpu.pc + 1];
+      const skipSize = isTwoWordInstruction(nextOpcode) ? 2 : 1;
+      cpu.cycles += skipSize;
+      cpu.pc += skipSize;
+    }
+  } else if (opcode === 0x9588) {
+    /* SLEEP, 1001 0101 1000 1000 */
+
+    /* not implemented */
+  } else if (opcode === 0x95e8) {
+    /* SPM, 1001 0101 1110 1000 */
+
+    /* not implemented */
+  } else if (opcode === 0x95f8) {
+    /* SPM(INC), 1001 0101 1111 1000 */
+
+    /* not implemented */
+  } else if ((opcode & 0xfe0f) === 0x9200) {
+    /* STS, 1001 001d dddd 0000 kkkk kkkk kkkk kkkk */
+    const value = cpu.data[(opcode & 0x1f0) >> 4];
+    const addr = cpu.progMem[cpu.pc + 1];
+    cpu.writeData(addr, value);
+    cpu.pc++;
+    cpu.cycles++;
+  } else if ((opcode & 0xfe0f) === 0x920c) {
+    /* STX, 1001 001r rrrr 1100 */
+    cpu.writeData(cpu.dataView.getUint16(26, true), cpu.data[(opcode & 0x1f0) >> 4]);
+    cpu.cycles++;
+  } else if ((opcode & 0xfe0f) === 0x920d) {
+    /* STX(INC), 1001 001r rrrr 1101 */
+    const x = cpu.dataView.getUint16(26, true);
+    cpu.writeData(x, cpu.data[(opcode & 0x1f0) >> 4]);
+    cpu.dataView.setUint16(26, x + 1, true);
+    cpu.cycles++;
+  } else if ((opcode & 0xfe0f) === 0x920e) {
+    /* STX(DEC), 1001 001r rrrr 1110 */
+    const i = cpu.data[(opcode & 0x1f0) >> 4];
+    const x = cpu.dataView.getUint16(26, true) - 1;
+    cpu.dataView.setUint16(26, x, true);
+    cpu.writeData(x, i);
+    cpu.cycles++;
+  } else if ((opcode & 0xfe0f) === 0x8208) {
+    /* STY, 1000 001r rrrr 1000 */
+    cpu.writeData(cpu.dataView.getUint16(28, true), cpu.data[(opcode & 0x1f0) >> 4]);
+    cpu.cycles++;
+  } else if ((opcode & 0xfe0f) === 0x9209) {
+    /* STY(INC), 1001 001r rrrr 1001 */
+    const i = cpu.data[(opcode & 0x1f0) >> 4];
+    const y = cpu.dataView.getUint16(28, true);
+    cpu.writeData(y, i);
+    cpu.dataView.setUint16(28, y + 1, true);
+    cpu.cycles++;
+  } else if ((opcode & 0xfe0f) === 0x920a) {
+    /* STY(DEC), 1001 001r rrrr 1010 */
+    const i = cpu.data[(opcode & 0x1f0) >> 4];
+    const y = cpu.dataView.getUint16(28, true) - 1;
+    cpu.dataView.setUint16(28, y, true);
+    cpu.writeData(y, i);
+    cpu.cycles++;
+  } else if ((opcode & 0xd208) === 0x8208 && opcode & 7 | (opcode & 0xc00) >> 7 | (opcode & 0x2000) >> 8) {
+    /* STDY, 10q0 qq1r rrrr 1qqq */
+    cpu.writeData(cpu.dataView.getUint16(28, true) + (opcode & 7 | (opcode & 0xc00) >> 7 | (opcode & 0x2000) >> 8), cpu.data[(opcode & 0x1f0) >> 4]);
+    cpu.cycles++;
+  } else if ((opcode & 0xfe0f) === 0x8200) {
+    /* STZ, 1000 001r rrrr 0000 */
+    cpu.writeData(cpu.dataView.getUint16(30, true), cpu.data[(opcode & 0x1f0) >> 4]);
+    cpu.cycles++;
+  } else if ((opcode & 0xfe0f) === 0x9201) {
+    /* STZ(INC), 1001 001r rrrr 0001 */
+    const z = cpu.dataView.getUint16(30, true);
+    cpu.writeData(z, cpu.data[(opcode & 0x1f0) >> 4]);
+    cpu.dataView.setUint16(30, z + 1, true);
+    cpu.cycles++;
+  } else if ((opcode & 0xfe0f) === 0x9202) {
+    /* STZ(DEC), 1001 001r rrrr 0010 */
+    const i = cpu.data[(opcode & 0x1f0) >> 4];
+    const z = cpu.dataView.getUint16(30, true) - 1;
+    cpu.dataView.setUint16(30, z, true);
+    cpu.writeData(z, i);
+    cpu.cycles++;
+  } else if ((opcode & 0xd208) === 0x8200 && opcode & 7 | (opcode & 0xc00) >> 7 | (opcode & 0x2000) >> 8) {
+    /* STDZ, 10q0 qq1r rrrr 0qqq */
+    cpu.writeData(cpu.dataView.getUint16(30, true) + (opcode & 7 | (opcode & 0xc00) >> 7 | (opcode & 0x2000) >> 8), cpu.data[(opcode & 0x1f0) >> 4]);
+    cpu.cycles++;
+  } else if ((opcode & 0xfc00) === 0x1800) {
+    /* SUB, 0001 10rd dddd rrrr */
+    const val1 = cpu.data[(opcode & 0x1f0) >> 4];
+    const val2 = cpu.data[opcode & 0xf | (opcode & 0x200) >> 5];
+    const R = val1 - val2;
+    cpu.data[(opcode & 0x1f0) >> 4] = R;
+    let sreg = cpu.data[95] & 0xc0;
+    sreg |= R ? 0 : 2;
+    sreg |= 128 & R ? 4 : 0;
+    sreg |= (val1 ^ val2) & (val1 ^ R) & 128 ? 8 : 0;
+    sreg |= sreg >> 2 & 1 ^ sreg >> 3 & 1 ? 0x10 : 0;
+    sreg |= val2 > val1 ? 1 : 0;
+    sreg |= 1 & (~val1 & val2 | val2 & R | R & ~val1) ? 0x20 : 0;
+    cpu.data[95] = sreg;
+  } else if ((opcode & 0xf000) === 0x5000) {
+    /* SUBI, 0101 KKKK dddd KKKK */
+    const val1 = cpu.data[((opcode & 0xf0) >> 4) + 16];
+    const val2 = opcode & 0xf | (opcode & 0xf00) >> 4;
+    const R = val1 - val2;
+    cpu.data[((opcode & 0xf0) >> 4) + 16] = R;
+    let sreg = cpu.data[95] & 0xc0;
+    sreg |= R ? 0 : 2;
+    sreg |= 128 & R ? 4 : 0;
+    sreg |= (val1 ^ val2) & (val1 ^ R) & 128 ? 8 : 0;
+    sreg |= sreg >> 2 & 1 ^ sreg >> 3 & 1 ? 0x10 : 0;
+    sreg |= val2 > val1 ? 1 : 0;
+    sreg |= 1 & (~val1 & val2 | val2 & R | R & ~val1) ? 0x20 : 0;
+    cpu.data[95] = sreg;
+  } else if ((opcode & 0xfe0f) === 0x9402) {
+    /* SWAP, 1001 010d dddd 0010 */
+    const d = (opcode & 0x1f0) >> 4;
+    const i = cpu.data[d];
+    cpu.data[d] = (15 & i) << 4 | (240 & i) >>> 4;
+  } else if (opcode === 0x95a8) {
+    /* WDR, 1001 0101 1010 1000 */
+
+    /* not implemented */
+  } else if ((opcode & 0xfe0f) === 0x9204) {
+    /* XCH, 1001 001r rrrr 0100 */
+    const r = (opcode & 0x1f0) >> 4;
+    const val1 = cpu.data[r];
+    const val2 = cpu.data[cpu.dataView.getUint16(30, true)];
+    cpu.data[cpu.dataView.getUint16(30, true)] = val1;
+    cpu.data[r] = val2;
+  }
+
+  cpu.pc = (cpu.pc + 1) % cpu.progMem.length;
+  cpu.cycles++;
+}
+},{}],"../../node_modules/avr8js/dist/esm/peripherals/gpio.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.AVRIOPort = exports.PinOverrideMode = exports.PinState = exports.portLConfig = exports.portKConfig = exports.portJConfig = exports.portHConfig = exports.portGConfig = exports.portFConfig = exports.portEConfig = exports.portDConfig = exports.portCConfig = exports.portBConfig = exports.portAConfig = void 0;
+const portAConfig = {
+  PIN: 0x20,
+  DDR: 0x21,
+  PORT: 0x22
+};
+exports.portAConfig = portAConfig;
+const portBConfig = {
+  PIN: 0x23,
+  DDR: 0x24,
+  PORT: 0x25
+};
+exports.portBConfig = portBConfig;
+const portCConfig = {
+  PIN: 0x26,
+  DDR: 0x27,
+  PORT: 0x28
+};
+exports.portCConfig = portCConfig;
+const portDConfig = {
+  PIN: 0x29,
+  DDR: 0x2a,
+  PORT: 0x2b
+};
+exports.portDConfig = portDConfig;
+const portEConfig = {
+  PIN: 0x2c,
+  DDR: 0x2d,
+  PORT: 0x2e
+};
+exports.portEConfig = portEConfig;
+const portFConfig = {
+  PIN: 0x2f,
+  DDR: 0x30,
+  PORT: 0x31
+};
+exports.portFConfig = portFConfig;
+const portGConfig = {
+  PIN: 0x32,
+  DDR: 0x33,
+  PORT: 0x34
+};
+exports.portGConfig = portGConfig;
+const portHConfig = {
+  PIN: 0x100,
+  DDR: 0x101,
+  PORT: 0x102
+};
+exports.portHConfig = portHConfig;
+const portJConfig = {
+  PIN: 0x103,
+  DDR: 0x104,
+  PORT: 0x105
+};
+exports.portJConfig = portJConfig;
+const portKConfig = {
+  PIN: 0x106,
+  DDR: 0x107,
+  PORT: 0x108
+};
+exports.portKConfig = portKConfig;
+const portLConfig = {
+  PIN: 0x109,
+  DDR: 0x10a,
+  PORT: 0x10b
+};
+exports.portLConfig = portLConfig;
+var PinState;
+exports.PinState = PinState;
+
+(function (PinState) {
+  PinState[PinState["Low"] = 0] = "Low";
+  PinState[PinState["High"] = 1] = "High";
+  PinState[PinState["Input"] = 2] = "Input";
+  PinState[PinState["InputPullUp"] = 3] = "InputPullUp";
+})(PinState || (exports.PinState = PinState = {}));
+/* This mechanism allows timers to override specific GPIO pins */
+
+
+var PinOverrideMode;
+exports.PinOverrideMode = PinOverrideMode;
+
+(function (PinOverrideMode) {
+  PinOverrideMode[PinOverrideMode["None"] = 0] = "None";
+  PinOverrideMode[PinOverrideMode["Enable"] = 1] = "Enable";
+  PinOverrideMode[PinOverrideMode["Set"] = 2] = "Set";
+  PinOverrideMode[PinOverrideMode["Clear"] = 3] = "Clear";
+  PinOverrideMode[PinOverrideMode["Toggle"] = 4] = "Toggle";
+})(PinOverrideMode || (exports.PinOverrideMode = PinOverrideMode = {}));
+
+class AVRIOPort {
+  constructor(cpu, portConfig) {
+    this.cpu = cpu;
+    this.portConfig = portConfig;
+    this.listeners = [];
+    this.pinValue = 0;
+    this.overrideMask = 0xff;
+    this.lastValue = 0;
+    this.lastDdr = 0;
+
+    cpu.writeHooks[portConfig.DDR] = value => {
+      const portValue = cpu.data[portConfig.PORT];
+      cpu.data[portConfig.DDR] = value;
+      this.updatePinRegister(portValue, value);
+      this.writeGpio(portValue, value);
+      return true;
+    };
+
+    cpu.writeHooks[portConfig.PORT] = value => {
+      const ddrMask = cpu.data[portConfig.DDR];
+      cpu.data[portConfig.PORT] = value;
+      this.updatePinRegister(value, ddrMask);
+      this.writeGpio(value, ddrMask);
+      return true;
+    };
+
+    cpu.writeHooks[portConfig.PIN] = value => {
+      // Writing to 1 PIN toggles PORT bits
+      const oldPortValue = cpu.data[portConfig.PORT];
+      const ddrMask = cpu.data[portConfig.DDR];
+      const portValue = oldPortValue ^ value;
+      cpu.data[portConfig.PORT] = portValue;
+      cpu.data[portConfig.PIN] = cpu.data[portConfig.PIN] & ~ddrMask | portValue & ddrMask;
+      this.writeGpio(portValue, ddrMask);
+      return true;
+    }; // The following hook is used by the timer compare output to override GPIO pins:
+
+
+    cpu.gpioTimerHooks[portConfig.PORT] = (pin, mode) => {
+      const pinMask = 1 << pin;
+
+      if (mode == PinOverrideMode.None) {
+        this.overrideMask |= pinMask;
+      } else {
+        this.overrideMask &= ~pinMask;
+
+        switch (mode) {
+          case PinOverrideMode.Enable:
+            this.overrideValue &= ~pinMask;
+            this.overrideValue |= cpu.data[portConfig.PORT] & pinMask;
+            break;
+
+          case PinOverrideMode.Set:
+            this.overrideValue |= pinMask;
+            break;
+
+          case PinOverrideMode.Clear:
+            this.overrideValue &= ~pinMask;
+            break;
+
+          case PinOverrideMode.Toggle:
+            this.overrideValue ^= pinMask;
+            break;
+        }
+      }
+
+      this.writeGpio(cpu.data[portConfig.PORT], cpu.data[portConfig.DDR]);
+    };
+  }
+
+  addListener(listener) {
+    this.listeners.push(listener);
+  }
+
+  removeListener(listener) {
+    this.listeners = this.listeners.filter(l => l !== listener);
+  }
+  /**
+   * Get the state of a given GPIO pin
+   *
+   * @param index Pin index to return from 0 to 7
+   * @returns PinState.Low or PinState.High if the pin is set to output, PinState.Input if the pin is set
+   *   to input, and PinState.InputPullUp if the pin is set to input and the internal pull-up resistor has
+   *   been enabled.
+   */
+
+
+  pinState(index) {
+    const ddr = this.cpu.data[this.portConfig.DDR];
+    const port = this.cpu.data[this.portConfig.PORT];
+    const bitMask = 1 << index;
+
+    if (ddr & bitMask) {
+      return this.lastValue & bitMask ? PinState.High : PinState.Low;
+    } else {
+      return port & bitMask ? PinState.InputPullUp : PinState.Input;
+    }
+  }
+  /**
+   * Sets the input value for the given pin. This is the value that
+   * will be returned when reading from the PIN register.
+   */
+
+
+  setPin(index, value) {
+    const bitMask = 1 << index;
+    this.pinValue &= ~bitMask;
+
+    if (value) {
+      this.pinValue |= bitMask;
+    }
+
+    this.updatePinRegister(this.cpu.data[this.portConfig.PORT], this.cpu.data[this.portConfig.DDR]);
+  }
+
+  updatePinRegister(port, ddr) {
+    this.cpu.data[this.portConfig.PIN] = this.pinValue & ~ddr | port & ddr;
+  }
+
+  writeGpio(value, ddr) {
+    const newValue = (value & this.overrideMask | this.overrideValue) & ddr | value & ~ddr;
+    const prevValue = this.lastValue;
+
+    if (newValue !== prevValue || ddr !== this.lastDdr) {
+      this.lastValue = newValue;
+      this.lastDdr = ddr;
+
+      for (const listener of this.listeners) {
+        listener(newValue, prevValue);
+      }
+    }
+  }
+
+}
+
+exports.AVRIOPort = AVRIOPort;
+},{}],"../../node_modules/avr8js/dist/esm/peripherals/timer.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.AVRTimer = exports.timer2Config = exports.timer1Config = exports.timer0Config = void 0;
+
+var _gpio = require("./gpio");
+
+/**
+ * AVR-8 Timers
+ * Part of AVR8js
+ * Reference: http://ww1.microchip.com/downloads/en/DeviceDoc/ATmega48A-PA-88A-PA-168A-PA-328-P-DS-DS40002061A.pdf
+ *
+ * Copyright (C) 2019, 2020, Uri Shaked
+ */
+const timer01Dividers = {
+  0: 0,
+  1: 1,
+  2: 8,
+  3: 64,
+  4: 256,
+  5: 1024,
+  6: 0,
+  7: 0
+};
+/** These are differnet for some devices (e.g. ATtiny85) */
+
+const defaultTimerBits = {
+  // TIFR bits
+  TOV: 1,
+  OCFA: 2,
+  OCFB: 4,
+  // TIMSK bits
+  TOIE: 1,
+  OCIEA: 2,
+  OCIEB: 4
+};
+const timer0Config = Object.assign({
+  bits: 8,
+  captureInterrupt: 0,
+  compAInterrupt: 0x1c,
+  compBInterrupt: 0x1e,
+  ovfInterrupt: 0x20,
+  TIFR: 0x35,
+  OCRA: 0x47,
+  OCRB: 0x48,
+  ICR: 0,
+  TCNT: 0x46,
+  TCCRA: 0x44,
+  TCCRB: 0x45,
+  TCCRC: 0,
+  TIMSK: 0x6e,
+  dividers: timer01Dividers,
+  compPortA: _gpio.portDConfig.PORT,
+  compPinA: 6,
+  compPortB: _gpio.portDConfig.PORT,
+  compPinB: 5
+}, defaultTimerBits);
+exports.timer0Config = timer0Config;
+const timer1Config = Object.assign({
+  bits: 16,
+  captureInterrupt: 0x14,
+  compAInterrupt: 0x16,
+  compBInterrupt: 0x18,
+  ovfInterrupt: 0x1a,
+  TIFR: 0x36,
+  OCRA: 0x88,
+  OCRB: 0x8a,
+  ICR: 0x86,
+  TCNT: 0x84,
+  TCCRA: 0x80,
+  TCCRB: 0x81,
+  TCCRC: 0x82,
+  TIMSK: 0x6f,
+  dividers: timer01Dividers,
+  compPortA: _gpio.portBConfig.PORT,
+  compPinA: 1,
+  compPortB: _gpio.portBConfig.PORT,
+  compPinB: 2
+}, defaultTimerBits);
+exports.timer1Config = timer1Config;
+const timer2Config = Object.assign({
+  bits: 8,
+  captureInterrupt: 0,
+  compAInterrupt: 0x0e,
+  compBInterrupt: 0x10,
+  ovfInterrupt: 0x12,
+  TIFR: 0x37,
+  OCRA: 0xb3,
+  OCRB: 0xb4,
+  ICR: 0,
+  TCNT: 0xb2,
+  TCCRA: 0xb0,
+  TCCRB: 0xb1,
+  TCCRC: 0,
+  TIMSK: 0x70,
+  dividers: {
+    0: 0,
+    1: 1,
+    2: 8,
+    3: 32,
+    4: 64,
+    5: 128,
+    6: 256,
+    7: 1024
+  },
+  compPortA: _gpio.portBConfig.PORT,
+  compPinA: 3,
+  compPortB: _gpio.portDConfig.PORT,
+  compPinB: 3
+}, defaultTimerBits);
+/* All the following types and constants are related to WGM (Waveform Generation Mode) bits: */
+
+exports.timer2Config = timer2Config;
+var TimerMode;
+
+(function (TimerMode) {
+  TimerMode[TimerMode["Normal"] = 0] = "Normal";
+  TimerMode[TimerMode["PWMPhaseCorrect"] = 1] = "PWMPhaseCorrect";
+  TimerMode[TimerMode["CTC"] = 2] = "CTC";
+  TimerMode[TimerMode["FastPWM"] = 3] = "FastPWM";
+  TimerMode[TimerMode["PWMPhaseFrequencyCorrect"] = 4] = "PWMPhaseFrequencyCorrect";
+  TimerMode[TimerMode["Reserved"] = 5] = "Reserved";
+})(TimerMode || (TimerMode = {}));
+
+var TOVUpdateMode;
+
+(function (TOVUpdateMode) {
+  TOVUpdateMode[TOVUpdateMode["Max"] = 0] = "Max";
+  TOVUpdateMode[TOVUpdateMode["Top"] = 1] = "Top";
+  TOVUpdateMode[TOVUpdateMode["Bottom"] = 2] = "Bottom";
+})(TOVUpdateMode || (TOVUpdateMode = {}));
+
+var OCRUpdateMode;
+
+(function (OCRUpdateMode) {
+  OCRUpdateMode[OCRUpdateMode["Immediate"] = 0] = "Immediate";
+  OCRUpdateMode[OCRUpdateMode["Top"] = 1] = "Top";
+  OCRUpdateMode[OCRUpdateMode["Bottom"] = 2] = "Bottom";
+})(OCRUpdateMode || (OCRUpdateMode = {}));
+
+const TopOCRA = 1;
+const TopICR = 2; // Enable Toggle mode for OCxA in PWM Wave Generation mode
+
+const OCToggle = 1;
+const {
+  Normal,
+  PWMPhaseCorrect,
+  CTC,
+  FastPWM,
+  Reserved,
+  PWMPhaseFrequencyCorrect
+} = TimerMode;
+const wgmModes8Bit = [
+/*0*/
+[Normal, 0xff, OCRUpdateMode.Immediate, TOVUpdateMode.Max, 0],
+/*1*/
+[PWMPhaseCorrect, 0xff, OCRUpdateMode.Top, TOVUpdateMode.Bottom, 0],
+/*2*/
+[CTC, TopOCRA, OCRUpdateMode.Immediate, TOVUpdateMode.Max, 0],
+/*3*/
+[FastPWM, 0xff, OCRUpdateMode.Bottom, TOVUpdateMode.Max, 0],
+/*4*/
+[Reserved, 0xff, OCRUpdateMode.Immediate, TOVUpdateMode.Max, 0],
+/*5*/
+[PWMPhaseCorrect, TopOCRA, OCRUpdateMode.Top, TOVUpdateMode.Bottom, OCToggle],
+/*6*/
+[Reserved, 0xff, OCRUpdateMode.Immediate, TOVUpdateMode.Max, 0],
+/*7*/
+[FastPWM, TopOCRA, OCRUpdateMode.Bottom, TOVUpdateMode.Top, OCToggle]]; // Table 16-4 in the datasheet
+
+const wgmModes16Bit = [
+/*0 */
+[Normal, 0xffff, OCRUpdateMode.Immediate, TOVUpdateMode.Max, 0],
+/*1 */
+[PWMPhaseCorrect, 0x00ff, OCRUpdateMode.Top, TOVUpdateMode.Bottom, 0],
+/*2 */
+[PWMPhaseCorrect, 0x01ff, OCRUpdateMode.Top, TOVUpdateMode.Bottom, 0],
+/*3 */
+[PWMPhaseCorrect, 0x03ff, OCRUpdateMode.Top, TOVUpdateMode.Bottom, 0],
+/*4 */
+[CTC, TopOCRA, OCRUpdateMode.Immediate, TOVUpdateMode.Max, 0],
+/*5 */
+[FastPWM, 0x00ff, OCRUpdateMode.Bottom, TOVUpdateMode.Top, 0],
+/*6 */
+[FastPWM, 0x01ff, OCRUpdateMode.Bottom, TOVUpdateMode.Top, 0],
+/*7 */
+[FastPWM, 0x03ff, OCRUpdateMode.Bottom, TOVUpdateMode.Top, 0],
+/*8 */
+[PWMPhaseFrequencyCorrect, TopICR, OCRUpdateMode.Bottom, TOVUpdateMode.Bottom, 0],
+/*9 */
+[PWMPhaseFrequencyCorrect, TopOCRA, OCRUpdateMode.Bottom, TOVUpdateMode.Bottom, OCToggle],
+/*10*/
+[PWMPhaseCorrect, TopICR, OCRUpdateMode.Top, TOVUpdateMode.Bottom, 0],
+/*11*/
+[PWMPhaseCorrect, TopOCRA, OCRUpdateMode.Top, TOVUpdateMode.Bottom, OCToggle],
+/*12*/
+[CTC, TopICR, OCRUpdateMode.Immediate, TOVUpdateMode.Max, 0],
+/*13*/
+[Reserved, 0xffff, OCRUpdateMode.Immediate, TOVUpdateMode.Max, 0],
+/*14*/
+[FastPWM, TopICR, OCRUpdateMode.Bottom, TOVUpdateMode.Top, OCToggle],
+/*15*/
+[FastPWM, TopOCRA, OCRUpdateMode.Bottom, TOVUpdateMode.Top, OCToggle]];
+
+function compToOverride(comp) {
+  switch (comp) {
+    case 1:
+      return _gpio.PinOverrideMode.Toggle;
+
+    case 2:
+      return _gpio.PinOverrideMode.Clear;
+
+    case 3:
+      return _gpio.PinOverrideMode.Set;
+
+    default:
+      return _gpio.PinOverrideMode.Enable;
+  }
+}
+
+class AVRTimer {
+  constructor(cpu, config) {
+    this.cpu = cpu;
+    this.config = config;
+    this.MAX = this.config.bits === 16 ? 0xffff : 0xff;
+    this.lastCycle = 0;
+    this.ocrA = 0;
+    this.nextOcrA = 0;
+    this.ocrB = 0;
+    this.nextOcrB = 0;
+    this.ocrUpdateMode = OCRUpdateMode.Immediate;
+    this.tovUpdateMode = TOVUpdateMode.Max;
+    this.icr = 0; // only for 16-bit timers
+
+    this.tcnt = 0;
+    this.tcntNext = 0;
+    this.tcntUpdated = false;
+    this.updateDivider = false;
+    this.countingUp = true;
+    this.divider = 0; // This is the temporary register used to access 16-bit registers (section 16.3 of the datasheet)
+
+    this.highByteTemp = 0; // Interrupts
+
+    this.OVF = {
+      address: this.config.ovfInterrupt,
+      flagRegister: this.config.TIFR,
+      flagMask: this.config.TOV,
+      enableRegister: this.config.TIMSK,
+      enableMask: this.config.TOIE
+    };
+    this.OCFA = {
+      address: this.config.compAInterrupt,
+      flagRegister: this.config.TIFR,
+      flagMask: this.config.OCFA,
+      enableRegister: this.config.TIMSK,
+      enableMask: this.config.OCIEA
+    };
+    this.OCFB = {
+      address: this.config.compBInterrupt,
+      flagRegister: this.config.TIFR,
+      flagMask: this.config.OCFB,
+      enableRegister: this.config.TIMSK,
+      enableMask: this.config.OCIEB
+    };
+
+    this.count = (reschedule = true) => {
+      const {
+        divider,
+        lastCycle,
+        cpu
+      } = this;
+      const {
+        cycles
+      } = cpu;
+      const delta = cycles - lastCycle;
+
+      if (divider && delta >= divider) {
+        const counterDelta = Math.floor(delta / divider);
+        this.lastCycle += counterDelta * divider;
+        const val = this.tcnt;
+        const {
+          timerMode,
+          TOP
+        } = this;
+        const phasePwm = timerMode === PWMPhaseCorrect || timerMode === PWMPhaseFrequencyCorrect;
+        const newVal = phasePwm ? this.phasePwmCount(val, counterDelta) : (val + counterDelta) % (TOP + 1);
+        const overflow = val + counterDelta > TOP; // A CPU write overrides (has priority over) all counter clear or count operations.
+
+        if (!this.tcntUpdated) {
+          this.tcnt = newVal;
+
+          if (!phasePwm) {
+            this.timerUpdated(newVal, val);
+          }
+        }
+
+        if (!phasePwm) {
+          if (timerMode === FastPWM && overflow) {
+            const {
+              compA,
+              compB
+            } = this;
+
+            if (compA) {
+              this.updateCompPin(compA, 'A', true);
+            }
+
+            if (compB) {
+              this.updateCompPin(compB, 'B', true);
+            }
+          }
+
+          if (this.ocrUpdateMode == OCRUpdateMode.Bottom && overflow) {
+            // OCRUpdateMode.Top only occurs in Phase Correct modes, handled by phasePwmCount()
+            this.ocrA = this.nextOcrA;
+            this.ocrB = this.nextOcrB;
+          } // OCRUpdateMode.Bottom only occurs in Phase Correct modes, handled by phasePwmCount().
+          // Thus we only handle TOVUpdateMode.Top or TOVUpdateMode.Max here.
+
+
+          if (overflow && (this.tovUpdateMode == TOVUpdateMode.Top || TOP === this.MAX)) {
+            cpu.setInterruptFlag(this.OVF);
+          }
+        }
+      }
+
+      if (this.tcntUpdated) {
+        this.tcnt = this.tcntNext;
+        this.tcntUpdated = false;
+      }
+
+      if (this.updateDivider) {
+        const newDivider = this.config.dividers[this.CS];
+        this.lastCycle = newDivider ? this.cpu.cycles : 0;
+        this.updateDivider = false;
+        this.divider = newDivider;
+
+        if (newDivider) {
+          cpu.addClockEvent(this.count, this.lastCycle + newDivider - cpu.cycles);
+        }
+
+        return;
+      }
+
+      if (reschedule && divider) {
+        cpu.addClockEvent(this.count, this.lastCycle + divider - cpu.cycles);
+      }
+    };
+
+    this.updateWGMConfig();
+
+    this.cpu.readHooks[config.TCNT] = addr => {
+      this.count(false);
+
+      if (this.config.bits === 16) {
+        this.cpu.data[addr + 1] = this.tcnt >> 8;
+      }
+
+      return this.cpu.data[addr] = this.tcnt & 0xff;
+    };
+
+    this.cpu.writeHooks[config.TCNT] = value => {
+      this.tcntNext = this.highByteTemp << 8 | value;
+      this.countingUp = true;
+      this.tcntUpdated = true;
+      this.cpu.updateClockEvent(this.count, 0);
+
+      if (this.divider) {
+        this.timerUpdated(this.tcntNext, this.tcntNext);
+      }
+    };
+
+    this.cpu.writeHooks[config.OCRA] = value => {
+      this.nextOcrA = this.highByteTemp << 8 | value;
+
+      if (this.ocrUpdateMode === OCRUpdateMode.Immediate) {
+        this.ocrA = this.nextOcrA;
+      }
+    };
+
+    this.cpu.writeHooks[config.OCRB] = value => {
+      this.nextOcrB = this.highByteTemp << 8 | value;
+
+      if (this.ocrUpdateMode === OCRUpdateMode.Immediate) {
+        this.ocrB = this.nextOcrB;
+      }
+    };
+
+    this.cpu.writeHooks[config.ICR] = value => {
+      this.icr = this.highByteTemp << 8 | value;
+    };
+
+    if (this.config.bits === 16) {
+      const updateTempRegister = value => {
+        this.highByteTemp = value;
+      };
+
+      this.cpu.writeHooks[config.TCNT + 1] = updateTempRegister;
+      this.cpu.writeHooks[config.OCRA + 1] = updateTempRegister;
+      this.cpu.writeHooks[config.OCRB + 1] = updateTempRegister;
+      this.cpu.writeHooks[config.ICR + 1] = updateTempRegister;
+    }
+
+    cpu.writeHooks[config.TCCRA] = value => {
+      this.cpu.data[config.TCCRA] = value;
+      this.updateWGMConfig();
+      return true;
+    };
+
+    cpu.writeHooks[config.TCCRB] = value => {
+      this.cpu.data[config.TCCRB] = value;
+      this.updateDivider = true;
+      this.cpu.clearClockEvent(this.count);
+      this.cpu.addClockEvent(this.count, 0);
+      this.updateWGMConfig();
+      return true;
+    };
+
+    cpu.writeHooks[config.TIFR] = value => {
+      this.cpu.data[config.TIFR] = value;
+      this.cpu.clearInterruptByFlag(this.OVF, value);
+      this.cpu.clearInterruptByFlag(this.OCFA, value);
+      this.cpu.clearInterruptByFlag(this.OCFB, value);
+      return true;
+    };
+
+    cpu.writeHooks[config.TIMSK] = value => {
+      this.cpu.updateInterruptEnable(this.OVF, value);
+      this.cpu.updateInterruptEnable(this.OCFA, value);
+      this.cpu.updateInterruptEnable(this.OCFB, value);
+    };
+  }
+
+  reset() {
+    this.divider = 0;
+    this.lastCycle = 0;
+    this.ocrA = 0;
+    this.nextOcrA = 0;
+    this.ocrB = 0;
+    this.nextOcrB = 0;
+    this.icr = 0;
+    this.tcnt = 0;
+    this.tcntNext = 0;
+    this.tcntUpdated = false;
+    this.countingUp = false;
+    this.updateDivider = true;
+  }
+
+  get TCCRA() {
+    return this.cpu.data[this.config.TCCRA];
+  }
+
+  get TCCRB() {
+    return this.cpu.data[this.config.TCCRB];
+  }
+
+  get TIMSK() {
+    return this.cpu.data[this.config.TIMSK];
+  }
+
+  get CS() {
+    return this.TCCRB & 0x7;
+  }
+
+  get WGM() {
+    const mask = this.config.bits === 16 ? 0x18 : 0x8;
+    return (this.TCCRB & mask) >> 1 | this.TCCRA & 0x3;
+  }
+
+  get TOP() {
+    switch (this.topValue) {
+      case TopOCRA:
+        return this.ocrA;
+
+      case TopICR:
+        return this.icr;
+
+      default:
+        return this.topValue;
+    }
+  }
+
+  updateWGMConfig() {
+    const {
+      config,
+      WGM
+    } = this;
+    const wgmModes = config.bits === 16 ? wgmModes16Bit : wgmModes8Bit;
+    const TCCRA = this.cpu.data[config.TCCRA];
+    const [timerMode, topValue, ocrUpdateMode, tovUpdateMode, flags] = wgmModes[WGM];
+    this.timerMode = timerMode;
+    this.topValue = topValue;
+    this.ocrUpdateMode = ocrUpdateMode;
+    this.tovUpdateMode = tovUpdateMode;
+    const pwmMode = timerMode === FastPWM || timerMode === PWMPhaseCorrect || timerMode === PWMPhaseFrequencyCorrect;
+    const prevCompA = this.compA;
+    this.compA = TCCRA >> 6 & 0x3;
+
+    if (this.compA === 1 && pwmMode && !(flags & OCToggle)) {
+      this.compA = 0;
+    }
+
+    if (!!prevCompA !== !!this.compA) {
+      this.updateCompA(this.compA ? _gpio.PinOverrideMode.Enable : _gpio.PinOverrideMode.None);
+    }
+
+    const prevCompB = this.compB;
+    this.compB = TCCRA >> 4 & 0x3;
+
+    if (this.compB === 1 && pwmMode) {
+      this.compB = 0; // Reserved, according to the datasheet
+    }
+
+    if (!!prevCompB !== !!this.compB) {
+      this.updateCompB(this.compB ? _gpio.PinOverrideMode.Enable : _gpio.PinOverrideMode.None);
+    }
+  }
+
+  phasePwmCount(value, delta) {
+    const {
+      ocrA,
+      ocrB,
+      TOP,
+      tcntUpdated
+    } = this;
+
+    while (delta > 0) {
+      if (this.countingUp) {
+        value++;
+
+        if (value === TOP && !tcntUpdated) {
+          this.countingUp = false;
+
+          if (this.ocrUpdateMode === OCRUpdateMode.Top) {
+            this.ocrA = this.nextOcrA;
+            this.ocrB = this.nextOcrB;
+          }
+        }
+      } else {
+        value--;
+
+        if (!value && !tcntUpdated) {
+          this.countingUp = true;
+          this.cpu.setInterruptFlag(this.OVF);
+
+          if (this.ocrUpdateMode === OCRUpdateMode.Bottom) {
+            this.ocrA = this.nextOcrA;
+            this.ocrB = this.nextOcrB;
+          }
+        }
+      }
+
+      if (!tcntUpdated && value === ocrA) {
+        this.cpu.setInterruptFlag(this.OCFA);
+
+        if (this.compA) {
+          this.updateCompPin(this.compA, 'A');
+        }
+      }
+
+      if (!tcntUpdated && value === ocrB) {
+        this.cpu.setInterruptFlag(this.OCFB);
+
+        if (this.compB) {
+          this.updateCompPin(this.compB, 'B');
+        }
+      }
+
+      delta--;
+    }
+
+    return value;
+  }
+
+  timerUpdated(value, prevValue) {
+    const {
+      ocrA,
+      ocrB
+    } = this;
+    const overflow = prevValue > value;
+
+    if ((prevValue < ocrA || overflow) && value >= ocrA) {
+      this.cpu.setInterruptFlag(this.OCFA);
+
+      if (this.compA) {
+        this.updateCompPin(this.compA, 'A');
+      }
+    }
+
+    if ((prevValue < ocrB || overflow) && value >= ocrB) {
+      this.cpu.setInterruptFlag(this.OCFB);
+
+      if (this.compB) {
+        this.updateCompPin(this.compB, 'B');
+      }
+    }
+  }
+
+  updateCompPin(compValue, pinName, bottom = false) {
+    let newValue = _gpio.PinOverrideMode.None;
+    const invertingMode = compValue === 3;
+    const isSet = this.countingUp === invertingMode;
+
+    switch (this.timerMode) {
+      case Normal:
+      case CTC:
+        newValue = compToOverride(compValue);
+        break;
+
+      case FastPWM:
+        if (compValue === 1) {
+          newValue = bottom ? _gpio.PinOverrideMode.None : _gpio.PinOverrideMode.Toggle;
+        } else {
+          newValue = invertingMode !== bottom ? _gpio.PinOverrideMode.Set : _gpio.PinOverrideMode.Clear;
+        }
+
+        break;
+
+      case PWMPhaseCorrect:
+      case PWMPhaseFrequencyCorrect:
+        if (compValue === 1) {
+          newValue = _gpio.PinOverrideMode.Toggle;
+        } else {
+          newValue = isSet ? _gpio.PinOverrideMode.Set : _gpio.PinOverrideMode.Clear;
+        }
+
+        break;
+    }
+
+    if (newValue !== _gpio.PinOverrideMode.None) {
+      if (pinName === 'A') {
+        this.updateCompA(newValue);
+      } else {
+        this.updateCompB(newValue);
+      }
+    }
+  }
+
+  updateCompA(value) {
+    const {
+      compPortA,
+      compPinA
+    } = this.config;
+    const hook = this.cpu.gpioTimerHooks[compPortA];
+
+    if (hook) {
+      hook(compPinA, value, compPortA);
+    }
+  }
+
+  updateCompB(value) {
+    const {
+      compPortB,
+      compPinB
+    } = this.config;
+    const hook = this.cpu.gpioTimerHooks[compPortB];
+
+    if (hook) {
+      hook(compPinB, value, compPortB);
+    }
+  }
+
+}
+
+exports.AVRTimer = AVRTimer;
+},{"./gpio":"../../node_modules/avr8js/dist/esm/peripherals/gpio.js"}],"../../node_modules/avr8js/dist/esm/peripherals/usart.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.AVRUSART = exports.usart0Config = void 0;
+
+/**
+ * AVR-8 USART Peripheral
+ * Part of AVR8js
+ * Reference: http://ww1.microchip.com/downloads/en/DeviceDoc/ATmega48A-PA-88A-PA-168A-PA-328-P-DS-DS40002061A.pdf
+ *
+ * Copyright (C) 2019, 2020, Uri Shaked
+ */
+const usart0Config = {
+  rxCompleteInterrupt: 0x24,
+  dataRegisterEmptyInterrupt: 0x26,
+  txCompleteInterrupt: 0x28,
+  UCSRA: 0xc0,
+  UCSRB: 0xc1,
+  UCSRC: 0xc2,
+  UBRRL: 0xc4,
+  UBRRH: 0xc5,
+  UDR: 0xc6
+};
+/* eslint-disable @typescript-eslint/no-unused-vars */
+// Register bits:
+
+exports.usart0Config = usart0Config;
+const UCSRA_RXC = 0x80; // USART Receive Complete
+
+const UCSRA_TXC = 0x40; // USART Transmit Complete
+
+const UCSRA_UDRE = 0x20; // USART Data Register Empty
+
+const UCSRA_FE = 0x10; // Frame Error
+
+const UCSRA_DOR = 0x8; // Data OverRun
+
+const UCSRA_UPE = 0x4; // USART Parity Error
+
+const UCSRA_U2X = 0x2; // Double the USART Transmission Speed
+
+const UCSRA_MPCM = 0x1; // Multi-processor Communication Mode
+
+const UCSRB_RXCIE = 0x80; // RX Complete Interrupt Enable
+
+const UCSRB_TXCIE = 0x40; // TX Complete Interrupt Enable
+
+const UCSRB_UDRIE = 0x20; // USART Data Register Empty Interrupt Enable
+
+const UCSRB_RXEN = 0x10; // Receiver Enable
+
+const UCSRB_TXEN = 0x8; // Transmitter Enable
+
+const UCSRB_UCSZ2 = 0x4; // Character Size 2
+
+const UCSRB_RXB8 = 0x2; // Receive Data Bit 8
+
+const UCSRB_TXB8 = 0x1; // Transmit Data Bit 8
+
+const UCSRC_UMSEL1 = 0x80; // USART Mode Select 1
+
+const UCSRC_UMSEL0 = 0x40; // USART Mode Select 0
+
+const UCSRC_UPM1 = 0x20; // Parity Mode 1
+
+const UCSRC_UPM0 = 0x10; // Parity Mode 0
+
+const UCSRC_USBS = 0x8; // Stop Bit Select
+
+const UCSRC_UCSZ1 = 0x4; // Character Size 1
+
+const UCSRC_UCSZ0 = 0x2; // Character Size 0
+
+const UCSRC_UCPOL = 0x1; // Clock Polarity
+
+/* eslint-enable @typescript-eslint/no-unused-vars */
+
+const rxMasks = {
+  5: 0x1f,
+  6: 0x3f,
+  7: 0x7f,
+  8: 0xff,
+  9: 0xff
+};
+
+class AVRUSART {
+  constructor(cpu, config, freqHz) {
+    this.cpu = cpu;
+    this.config = config;
+    this.freqHz = freqHz;
+    this.onByteTransmit = null;
+    this.onLineTransmit = null;
+    this.onRxComplete = null;
+    this.rxBusyValue = false;
+    this.rxByte = 0;
+    this.lineBuffer = ''; // Interrupts
+
+    this.RXC = {
+      address: this.config.rxCompleteInterrupt,
+      flagRegister: this.config.UCSRA,
+      flagMask: UCSRA_RXC,
+      enableRegister: this.config.UCSRB,
+      enableMask: UCSRB_RXCIE,
+      constant: true
+    };
+    this.UDRE = {
+      address: this.config.dataRegisterEmptyInterrupt,
+      flagRegister: this.config.UCSRA,
+      flagMask: UCSRA_UDRE,
+      enableRegister: this.config.UCSRB,
+      enableMask: UCSRB_UDRIE
+    };
+    this.TXC = {
+      address: this.config.txCompleteInterrupt,
+      flagRegister: this.config.UCSRA,
+      flagMask: UCSRA_TXC,
+      enableRegister: this.config.UCSRB,
+      enableMask: UCSRB_TXCIE
+    };
+    this.reset();
+
+    this.cpu.writeHooks[config.UCSRA] = value => {
+      cpu.data[config.UCSRA] = value & (UCSRA_MPCM | UCSRA_U2X);
+      cpu.clearInterruptByFlag(this.TXC, value);
+      return true;
+    };
+
+    this.cpu.writeHooks[config.UCSRB] = (value, oldValue) => {
+      cpu.updateInterruptEnable(this.RXC, value);
+      cpu.updateInterruptEnable(this.UDRE, value);
+      cpu.updateInterruptEnable(this.TXC, value);
+
+      if (value & UCSRB_RXEN && oldValue & UCSRB_RXEN) {
+        cpu.clearInterrupt(this.RXC);
+      }
+
+      if (value & UCSRB_TXEN && !(oldValue & UCSRB_TXEN)) {
+        // Enabling the transmission - mark UDR as empty
+        cpu.setInterruptFlag(this.UDRE);
+      }
+    };
+
+    this.cpu.readHooks[config.UDR] = () => {
+      var _a;
+
+      const mask = (_a = rxMasks[this.bitsPerChar]) !== null && _a !== void 0 ? _a : 0xff;
+      const result = this.rxByte & mask;
+      this.rxByte = 0;
+      this.cpu.clearInterrupt(this.RXC);
+      return result;
+    };
+
+    this.cpu.writeHooks[config.UDR] = value => {
+      if (this.onByteTransmit) {
+        this.onByteTransmit(value);
+      }
+
+      if (this.onLineTransmit) {
+        const ch = String.fromCharCode(value);
+
+        if (ch === '\n') {
+          this.onLineTransmit(this.lineBuffer);
+          this.lineBuffer = '';
+        } else {
+          this.lineBuffer += ch;
+        }
+      }
+
+      this.cpu.addClockEvent(() => {
+        cpu.setInterruptFlag(this.UDRE);
+        cpu.setInterruptFlag(this.TXC);
+      }, this.cyclesPerChar);
+      this.cpu.clearInterrupt(this.TXC);
+      this.cpu.clearInterrupt(this.UDRE);
+    };
+  }
+
+  reset() {
+    this.cpu.data[this.config.UCSRA] = UCSRA_UDRE;
+    this.cpu.data[this.config.UCSRB] = 0;
+    this.cpu.data[this.config.UCSRC] = UCSRC_UCSZ1 | UCSRC_UCSZ0; // default: 8 bits per byte
+
+    this.rxBusyValue = false;
+    this.rxByte = 0;
+    this.lineBuffer = '';
+  }
+
+  get rxBusy() {
+    return this.rxBusyValue;
+  }
+
+  writeByte(value) {
+    const {
+      cpu,
+      config
+    } = this;
+
+    if (this.rxBusyValue || !(cpu.data[config.UCSRB] & UCSRB_RXEN)) {
+      return false;
+    }
+
+    this.rxBusyValue = true;
+    cpu.addClockEvent(() => {
+      var _a;
+
+      this.rxByte = value;
+      this.rxBusyValue = false;
+      cpu.setInterruptFlag(this.RXC);
+      (_a = this.onRxComplete) === null || _a === void 0 ? void 0 : _a.call(this);
+    }, this.cyclesPerChar);
+    return true;
+  }
+
+  get cyclesPerChar() {
+    const symbolsPerChar = 1 + this.bitsPerChar + this.stopBits + (this.parityEnabled ? 1 : 0);
+    return (this.UBRR * this.multiplier + 1) * symbolsPerChar;
+  }
+
+  get UBRR() {
+    return this.cpu.data[this.config.UBRRH] << 8 | this.cpu.data[this.config.UBRRL];
+  }
+
+  get multiplier() {
+    return this.cpu.data[this.config.UCSRA] & UCSRA_U2X ? 8 : 16;
+  }
+
+  get baudRate() {
+    return Math.floor(this.freqHz / (this.multiplier * (1 + this.UBRR)));
+  }
+
+  get bitsPerChar() {
+    const ucsz = (this.cpu.data[this.config.UCSRC] & (UCSRC_UCSZ1 | UCSRC_UCSZ0)) >> 1 | this.cpu.data[this.config.UCSRB] & UCSRB_UCSZ2;
+
+    switch (ucsz) {
+      case 0:
+        return 5;
+
+      case 1:
+        return 6;
+
+      case 2:
+        return 7;
+
+      case 3:
+        return 8;
+
+      default: // 4..6 are reserved
+
+      case 7:
+        return 9;
+    }
+  }
+
+  get stopBits() {
+    return this.cpu.data[this.config.UCSRC] & UCSRC_USBS ? 2 : 1;
+  }
+
+  get parityEnabled() {
+    return this.cpu.data[this.config.UCSRC] & UCSRC_UPM1 ? true : false;
+  }
+
+  get parityOdd() {
+    return this.cpu.data[this.config.UCSRC] & UCSRC_UPM0 ? true : false;
+  }
+
+}
+
+exports.AVRUSART = AVRUSART;
+},{}],"../../node_modules/avr8js/dist/esm/peripherals/eeprom.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.AVREEPROM = exports.eepromConfig = exports.EEPROMMemoryBackend = void 0;
+
+class EEPROMMemoryBackend {
+  constructor(size) {
+    this.memory = new Uint8Array(size);
+    this.memory.fill(0xff);
+  }
+
+  readMemory(addr) {
+    return this.memory[addr];
+  }
+
+  writeMemory(addr, value) {
+    this.memory[addr] &= value;
+  }
+
+  eraseMemory(addr) {
+    this.memory[addr] = 0xff;
+  }
+
+}
+
+exports.EEPROMMemoryBackend = EEPROMMemoryBackend;
+const eepromConfig = {
+  eepromReadyInterrupt: 0x2c,
+  EECR: 0x3f,
+  EEDR: 0x40,
+  EEARL: 0x41,
+  EEARH: 0x42,
+  eraseCycles: 28800,
+  writeCycles: 28800
+};
+exports.eepromConfig = eepromConfig;
+const EERE = 1 << 0;
+const EEPE = 1 << 1;
+const EEMPE = 1 << 2;
+const EERIE = 1 << 3;
+const EEPM0 = 1 << 4;
+const EEPM1 = 1 << 5;
+
+class AVREEPROM {
+  constructor(cpu, backend, config = eepromConfig) {
+    this.cpu = cpu;
+    this.backend = backend;
+    this.config = config;
+    /**
+     * Used to keep track on the last write to EEMPE. From the datasheet:
+     * The EEMPE bit determines whether setting EEPE to one causes the EEPROM to be written.
+     * When EEMPE is set, setting EEPE within four clock cycles will write data to the EEPROM
+     * at the selected address If EEMPE is zero, setting EEPE will have no effect.
+     */
+
+    this.writeEnabledCycles = 0;
+    this.writeCompleteCycles = 0; // Interrupts
+
+    this.EER = {
+      address: this.config.eepromReadyInterrupt,
+      flagRegister: this.config.EECR,
+      flagMask: EEPE,
+      enableRegister: this.config.EECR,
+      enableMask: EERIE,
+      constant: true,
+      inverseFlag: true
+    };
+
+    this.cpu.writeHooks[this.config.EECR] = eecr => {
+      const {
+        EEARH,
+        EEARL,
+        EECR,
+        EEDR
+      } = this.config;
+      const addr = this.cpu.data[EEARH] << 8 | this.cpu.data[EEARL];
+
+      if (eecr & EERE) {
+        this.cpu.clearInterrupt(this.EER);
+      }
+
+      if (eecr & EEMPE) {
+        const eempeCycles = 4;
+        this.writeEnabledCycles = this.cpu.cycles + eempeCycles;
+        this.cpu.addClockEvent(() => {
+          this.cpu.data[EECR] &= ~EEMPE;
+        }, eempeCycles);
+      } // Read
+
+
+      if (eecr & EERE) {
+        this.cpu.data[EEDR] = this.backend.readMemory(addr); // When the EEPROM is read, the CPU is halted for four cycles before the
+        // next instruction is executed.
+
+        this.cpu.cycles += 4;
+        return true;
+      } // Write
+
+
+      if (eecr & EEPE) {
+        //  If EEMPE is zero, setting EEPE will have no effect.
+        if (this.cpu.cycles >= this.writeEnabledCycles) {
+          return true;
+        } // Check for write-in-progress
+
+
+        if (this.cpu.cycles < this.writeCompleteCycles) {
+          return true;
+        }
+
+        const eedr = this.cpu.data[EEDR];
+        this.writeCompleteCycles = this.cpu.cycles; // Erase
+
+        if (!(eecr & EEPM1)) {
+          this.backend.eraseMemory(addr);
+          this.writeCompleteCycles += this.config.eraseCycles;
+        } // Write
+
+
+        if (!(eecr & EEPM0)) {
+          this.backend.writeMemory(addr, eedr);
+          this.writeCompleteCycles += this.config.writeCycles;
+        }
+
+        this.cpu.data[EECR] |= EEPE;
+        this.cpu.addClockEvent(() => {
+          this.cpu.setInterruptFlag(this.EER);
+        }, this.writeCompleteCycles - this.cpu.cycles); // When EEPE has been set, the CPU is halted for two cycles before the
+        // next instruction is executed.
+
+        this.cpu.cycles += 2;
+        return true;
+      }
+
+      return false;
+    };
+  }
+
+}
+
+exports.AVREEPROM = AVREEPROM;
+},{}],"../../node_modules/avr8js/dist/esm/peripherals/twi.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.AVRTWI = exports.NoopTWIEventHandler = exports.twiConfig = void 0;
+
+/* eslint-disable @typescript-eslint/no-unused-vars */
+// Register bits:
+const TWCR_TWINT = 0x80; // TWI Interrupt Flag
+
+const TWCR_TWEA = 0x40; // TWI Enable Acknowledge Bit
+
+const TWCR_TWSTA = 0x20; // TWI START Condition Bit
+
+const TWCR_TWSTO = 0x10; // TWI STOP Condition Bit
+
+const TWCR_TWWC = 0x8; //TWI Write Collision Flag
+
+const TWCR_TWEN = 0x4; //  TWI Enable Bit
+
+const TWCR_TWIE = 0x1; // TWI Interrupt Enable
+
+const TWSR_TWS_MASK = 0xf8; // TWI Status
+
+const TWSR_TWPS1 = 0x2; // TWI Prescaler Bits
+
+const TWSR_TWPS0 = 0x1; // TWI Prescaler Bits
+
+const TWSR_TWPS_MASK = TWSR_TWPS1 | TWSR_TWPS0; // TWI Prescaler mask
+
+const TWAR_TWA_MASK = 0xfe; //  TWI (Slave) Address Register
+
+const TWAR_TWGCE = 0x1; // TWI General Call Recognition Enable Bit
+
+const STATUS_BUS_ERROR = 0x0;
+const STATUS_TWI_IDLE = 0xf8; // Master states
+
+const STATUS_START = 0x08;
+const STATUS_REPEATED_START = 0x10;
+const STATUS_SLAW_ACK = 0x18;
+const STATUS_SLAW_NACK = 0x20;
+const STATUS_DATA_SENT_ACK = 0x28;
+const STATUS_DATA_SENT_NACK = 0x30;
+const STATUS_DATA_LOST_ARBITRATION = 0x38;
+const STATUS_SLAR_ACK = 0x40;
+const STATUS_SLAR_NACK = 0x48;
+const STATUS_DATA_RECEIVED_ACK = 0x50;
+const STATUS_DATA_RECEIVED_NACK = 0x58; // TODO: add slave states
+
+/* eslint-enable @typescript-eslint/no-unused-vars */
+
+const twiConfig = {
+  twiInterrupt: 0x30,
+  TWBR: 0xb8,
+  TWSR: 0xb9,
+  TWAR: 0xba,
+  TWDR: 0xbb,
+  TWCR: 0xbc,
+  TWAMR: 0xbd
+}; // A simple TWI Event Handler that sends a NACK for all events
+
+exports.twiConfig = twiConfig;
+
+class NoopTWIEventHandler {
+  constructor(twi) {
+    this.twi = twi;
+  }
+
+  start() {
+    this.twi.completeStart();
+  }
+
+  stop() {
+    this.twi.completeStop();
+  }
+
+  connectToSlave() {
+    this.twi.completeConnect(false);
+  }
+
+  writeByte() {
+    this.twi.completeWrite(false);
+  }
+
+  readByte() {
+    this.twi.completeRead(0xff);
+  }
+
+}
+
+exports.NoopTWIEventHandler = NoopTWIEventHandler;
+
+class AVRTWI {
+  constructor(cpu, config, freqHz) {
+    this.cpu = cpu;
+    this.config = config;
+    this.freqHz = freqHz;
+    this.eventHandler = new NoopTWIEventHandler(this); // Interrupts
+
+    this.TWI = {
+      address: this.config.twiInterrupt,
+      flagRegister: this.config.TWCR,
+      flagMask: TWCR_TWINT,
+      enableRegister: this.config.TWCR,
+      enableMask: TWCR_TWIE
+    };
+    this.updateStatus(STATUS_TWI_IDLE);
+
+    this.cpu.writeHooks[config.TWCR] = value => {
+      this.cpu.data[config.TWCR] = value;
+      const clearInt = value & TWCR_TWINT;
+      this.cpu.clearInterruptByFlag(this.TWI, value);
+      this.cpu.updateInterruptEnable(this.TWI, value);
+      const {
+        status
+      } = this;
+
+      if (clearInt && value & TWCR_TWEN) {
+        const twdrValue = this.cpu.data[this.config.TWDR];
+        this.cpu.addClockEvent(() => {
+          if (value & TWCR_TWSTA) {
+            this.eventHandler.start(status !== STATUS_TWI_IDLE);
+          } else if (value & TWCR_TWSTO) {
+            this.eventHandler.stop();
+          } else if (status === STATUS_START || status === STATUS_REPEATED_START) {
+            this.eventHandler.connectToSlave(twdrValue >> 1, twdrValue & 0x1 ? false : true);
+          } else if (status === STATUS_SLAW_ACK || status === STATUS_DATA_SENT_ACK) {
+            this.eventHandler.writeByte(twdrValue);
+          } else if (status === STATUS_SLAR_ACK || status === STATUS_DATA_RECEIVED_ACK) {
+            const ack = !!(value & TWCR_TWEA);
+            this.eventHandler.readByte(ack);
+          }
+        }, 0);
+        return true;
+      }
+    };
+  }
+
+  get prescaler() {
+    switch (this.cpu.data[this.config.TWSR] & TWSR_TWPS_MASK) {
+      case 0:
+        return 1;
+
+      case 1:
+        return 4;
+
+      case 2:
+        return 16;
+
+      case 3:
+        return 64;
+    } // We should never get here:
+
+
+    throw new Error('Invalid prescaler value!');
+  }
+
+  get sclFrequency() {
+    return this.freqHz / (16 + 2 * this.cpu.data[this.config.TWBR] * this.prescaler);
+  }
+
+  completeStart() {
+    this.updateStatus(this.status === STATUS_TWI_IDLE ? STATUS_START : STATUS_REPEATED_START);
+  }
+
+  completeStop() {
+    this.cpu.data[this.config.TWCR] &= ~TWCR_TWSTO;
+    this.updateStatus(STATUS_TWI_IDLE);
+  }
+
+  completeConnect(ack) {
+    if (this.cpu.data[this.config.TWDR] & 0x1) {
+      this.updateStatus(ack ? STATUS_SLAR_ACK : STATUS_SLAR_NACK);
+    } else {
+      this.updateStatus(ack ? STATUS_SLAW_ACK : STATUS_SLAW_NACK);
+    }
+  }
+
+  completeWrite(ack) {
+    this.updateStatus(ack ? STATUS_DATA_SENT_ACK : STATUS_DATA_SENT_NACK);
+  }
+
+  completeRead(value) {
+    const ack = !!(this.cpu.data[this.config.TWCR] & TWCR_TWEA);
+    this.cpu.data[this.config.TWDR] = value;
+    this.updateStatus(ack ? STATUS_DATA_RECEIVED_ACK : STATUS_DATA_RECEIVED_NACK);
+  }
+
+  get status() {
+    return this.cpu.data[this.config.TWSR] & TWSR_TWS_MASK;
+  }
+
+  updateStatus(value) {
+    const {
+      TWSR
+    } = this.config;
+    this.cpu.data[TWSR] = this.cpu.data[TWSR] & ~TWSR_TWS_MASK | value;
+    this.cpu.setInterruptFlag(this.TWI);
+  }
+
+}
+
+exports.AVRTWI = AVRTWI;
+},{}],"../../node_modules/avr8js/dist/esm/peripherals/spi.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.AVRSPI = exports.spiConfig = void 0;
+// Register bits:
+const SPCR_SPIE = 0x80; //  SPI Interrupt Enable
+
+const SPCR_SPE = 0x40; // SPI Enable
+
+const SPCR_DORD = 0x20; // Data Order
+
+const SPCR_MSTR = 0x10; //  Master/Slave Select
+
+const SPCR_CPOL = 0x8; // Clock Polarity
+
+const SPCR_CPHA = 0x4; // Clock Phase
+
+const SPCR_SPR1 = 0x2; // SPI Clock Rate Select 1
+
+const SPCR_SPR0 = 0x1; // SPI Clock Rate Select 0
+
+const SPSR_SPR_MASK = SPCR_SPR1 | SPCR_SPR0;
+const SPSR_SPIF = 0x80; // SPI Interrupt Flag
+
+const SPSR_WCOL = 0x40; // Write COLlision Flag
+
+const SPSR_SPI2X = 0x1; // Double SPI Speed Bit
+
+const spiConfig = {
+  spiInterrupt: 0x22,
+  SPCR: 0x4c,
+  SPSR: 0x4d,
+  SPDR: 0x4e
+};
+exports.spiConfig = spiConfig;
+const bitsPerByte = 8;
+
+class AVRSPI {
+  constructor(cpu, config, freqHz) {
+    this.cpu = cpu;
+    this.config = config;
+    this.freqHz = freqHz;
+    this.onTransfer = null;
+    this.transmissionActive = false;
+    this.receivedByte = 0; // Interrupts
+
+    this.SPI = {
+      address: this.config.spiInterrupt,
+      flagRegister: this.config.SPSR,
+      flagMask: SPSR_SPIF,
+      enableRegister: this.config.SPCR,
+      enableMask: SPCR_SPIE
+    };
+    const {
+      SPCR,
+      SPSR,
+      SPDR
+    } = config;
+
+    cpu.writeHooks[SPDR] = value => {
+      var _a, _b;
+
+      if (!(cpu.data[SPCR] & SPCR_SPE)) {
+        // SPI not enabled, ignore write
+        return;
+      } // Write collision
+
+
+      if (this.transmissionActive) {
+        cpu.data[SPSR] |= SPSR_WCOL;
+        return true;
+      } // Clear write collision / interrupt flags
+
+
+      cpu.data[SPSR] &= ~SPSR_WCOL;
+      this.cpu.clearInterrupt(this.SPI);
+      this.receivedByte = (_b = (_a = this.onTransfer) === null || _a === void 0 ? void 0 : _a.call(this, value)) !== null && _b !== void 0 ? _b : 0;
+      const cyclesToComplete = this.clockDivider * bitsPerByte;
+      this.transmissionActive = true;
+      this.cpu.addClockEvent(() => {
+        this.cpu.data[SPDR] = this.receivedByte;
+        this.cpu.setInterruptFlag(this.SPI);
+        this.transmissionActive = false;
+      }, cyclesToComplete);
+      return true;
+    };
+
+    cpu.writeHooks[SPSR] = value => {
+      this.cpu.data[SPSR] = value;
+      this.cpu.clearInterruptByFlag(this.SPI, value);
+    };
+  }
+
+  reset() {
+    this.transmissionActive = false;
+    this.receivedByte = 0;
+  }
+
+  get isMaster() {
+    return this.cpu.data[this.config.SPCR] & SPCR_MSTR ? true : false;
+  }
+
+  get dataOrder() {
+    return this.cpu.data[this.config.SPCR] & SPCR_DORD ? 'lsbFirst' : 'msbFirst';
+  }
+
+  get spiMode() {
+    const CPHA = this.cpu.data[this.config.SPCR] & SPCR_CPHA;
+    const CPOL = this.cpu.data[this.config.SPCR] & SPCR_CPOL;
+    return (CPHA ? 2 : 0) | (CPOL ? 1 : 0);
+  }
+  /**
+   * The clock divider is only relevant for Master mode
+   */
+
+
+  get clockDivider() {
+    const base = this.cpu.data[this.config.SPSR] & SPSR_SPI2X ? 2 : 4;
+
+    switch (this.cpu.data[this.config.SPCR] & SPSR_SPR_MASK) {
+      case 0b00:
+        return base;
+
+      case 0b01:
+        return base * 4;
+
+      case 0b10:
+        return base * 16;
+
+      case 0b11:
+        return base * 32;
+    } // We should never get here:
+
+
+    throw new Error('Invalid divider value!');
+  }
+  /**
+   * The SPI freqeuncy is only relevant to Master mode.
+   * In slave mode, the frequency can be as high as F(osc) / 4.
+   */
+
+
+  get spiFrequency() {
+    return this.freqHz / this.clockDivider;
+  }
+
+}
+
+exports.AVRSPI = AVRSPI;
+},{}],"../../node_modules/avr8js/dist/esm/peripherals/clock.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.AVRClock = exports.clockConfig = void 0;
+
+/**
+ * AVR8 Clock
+ * Part of AVR8js
+ * Reference: http://ww1.microchip.com/downloads/en/DeviceDoc/ATmega48A-PA-88A-PA-168A-PA-328-P-DS-DS40002061A.pdf
+ *
+ * Copyright (C) 2020, Uri Shaked
+ */
+const CLKPCE = 128;
+const clockConfig = {
+  CLKPR: 0x61
+};
+exports.clockConfig = clockConfig;
+const prescalers = [1, 2, 4, 8, 16, 32, 64, 128, 256, // The following values are "reserved" according to the datasheet, so we measured
+// with a scope to figure them out (on ATmega328p)
+2, 4, 8, 16, 32, 64, 128];
+
+class AVRClock {
+  constructor(cpu, baseFreqHz, config = clockConfig) {
+    this.cpu = cpu;
+    this.baseFreqHz = baseFreqHz;
+    this.config = config;
+    this.clockEnabledCycles = 0;
+    this.prescalerValue = 1;
+    this.cyclesDelta = 0;
+
+    this.cpu.writeHooks[this.config.CLKPR] = clkpr => {
+      if ((!this.clockEnabledCycles || this.clockEnabledCycles < cpu.cycles) && clkpr === CLKPCE) {
+        this.clockEnabledCycles = this.cpu.cycles + 4;
+      } else if (this.clockEnabledCycles && this.clockEnabledCycles >= cpu.cycles) {
+        this.clockEnabledCycles = 0;
+        const index = clkpr & 0xf;
+        const oldPrescaler = this.prescalerValue;
+        this.prescalerValue = prescalers[index];
+        this.cpu.data[this.config.CLKPR] = index;
+
+        if (oldPrescaler !== this.prescalerValue) {
+          this.cyclesDelta = (cpu.cycles + this.cyclesDelta) * (oldPrescaler / this.prescalerValue) - cpu.cycles;
+        }
+      }
+
+      return true;
+    };
+  }
+
+  get frequency() {
+    return this.baseFreqHz / this.prescalerValue;
+  }
+
+  get prescaler() {
+    return this.prescalerValue;
+  }
+
+  get timeNanos() {
+    return (this.cpu.cycles + this.cyclesDelta) / this.frequency * 1e9;
+  }
+
+  get timeMicros() {
+    return (this.cpu.cycles + this.cyclesDelta) / this.frequency * 1e6;
+  }
+
+  get timeMillis() {
+    return (this.cpu.cycles + this.cyclesDelta) / this.frequency * 1e3;
+  }
+
+}
+
+exports.AVRClock = AVRClock;
+},{}],"../../node_modules/avr8js/dist/esm/index.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var _exportNames = {
+  CPU: true,
+  avrInstruction: true,
+  avrInterrupt: true,
+  AVRTimer: true,
+  timer0Config: true,
+  timer1Config: true,
+  timer2Config: true,
+  AVRIOPort: true,
+  portAConfig: true,
+  portBConfig: true,
+  portCConfig: true,
+  portDConfig: true,
+  portEConfig: true,
+  portFConfig: true,
+  portGConfig: true,
+  portHConfig: true,
+  portJConfig: true,
+  portKConfig: true,
+  portLConfig: true,
+  PinState: true,
+  AVRUSART: true,
+  usart0Config: true,
+  AVREEPROM: true,
+  EEPROMMemoryBackend: true,
+  eepromConfig: true,
+  spiConfig: true,
+  AVRSPI: true,
+  AVRClock: true,
+  clockConfig: true
+};
+Object.defineProperty(exports, "CPU", {
+  enumerable: true,
+  get: function () {
+    return _cpu.CPU;
+  }
+});
+Object.defineProperty(exports, "avrInstruction", {
+  enumerable: true,
+  get: function () {
+    return _instruction.avrInstruction;
+  }
+});
+Object.defineProperty(exports, "avrInterrupt", {
+  enumerable: true,
+  get: function () {
+    return _interrupt.avrInterrupt;
+  }
+});
+Object.defineProperty(exports, "AVRTimer", {
+  enumerable: true,
+  get: function () {
+    return _timer.AVRTimer;
+  }
+});
+Object.defineProperty(exports, "timer0Config", {
+  enumerable: true,
+  get: function () {
+    return _timer.timer0Config;
+  }
+});
+Object.defineProperty(exports, "timer1Config", {
+  enumerable: true,
+  get: function () {
+    return _timer.timer1Config;
+  }
+});
+Object.defineProperty(exports, "timer2Config", {
+  enumerable: true,
+  get: function () {
+    return _timer.timer2Config;
+  }
+});
+Object.defineProperty(exports, "AVRIOPort", {
+  enumerable: true,
+  get: function () {
+    return _gpio.AVRIOPort;
+  }
+});
+Object.defineProperty(exports, "portAConfig", {
+  enumerable: true,
+  get: function () {
+    return _gpio.portAConfig;
+  }
+});
+Object.defineProperty(exports, "portBConfig", {
+  enumerable: true,
+  get: function () {
+    return _gpio.portBConfig;
+  }
+});
+Object.defineProperty(exports, "portCConfig", {
+  enumerable: true,
+  get: function () {
+    return _gpio.portCConfig;
+  }
+});
+Object.defineProperty(exports, "portDConfig", {
+  enumerable: true,
+  get: function () {
+    return _gpio.portDConfig;
+  }
+});
+Object.defineProperty(exports, "portEConfig", {
+  enumerable: true,
+  get: function () {
+    return _gpio.portEConfig;
+  }
+});
+Object.defineProperty(exports, "portFConfig", {
+  enumerable: true,
+  get: function () {
+    return _gpio.portFConfig;
+  }
+});
+Object.defineProperty(exports, "portGConfig", {
+  enumerable: true,
+  get: function () {
+    return _gpio.portGConfig;
+  }
+});
+Object.defineProperty(exports, "portHConfig", {
+  enumerable: true,
+  get: function () {
+    return _gpio.portHConfig;
+  }
+});
+Object.defineProperty(exports, "portJConfig", {
+  enumerable: true,
+  get: function () {
+    return _gpio.portJConfig;
+  }
+});
+Object.defineProperty(exports, "portKConfig", {
+  enumerable: true,
+  get: function () {
+    return _gpio.portKConfig;
+  }
+});
+Object.defineProperty(exports, "portLConfig", {
+  enumerable: true,
+  get: function () {
+    return _gpio.portLConfig;
+  }
+});
+Object.defineProperty(exports, "PinState", {
+  enumerable: true,
+  get: function () {
+    return _gpio.PinState;
+  }
+});
+Object.defineProperty(exports, "AVRUSART", {
+  enumerable: true,
+  get: function () {
+    return _usart.AVRUSART;
+  }
+});
+Object.defineProperty(exports, "usart0Config", {
+  enumerable: true,
+  get: function () {
+    return _usart.usart0Config;
+  }
+});
+Object.defineProperty(exports, "AVREEPROM", {
+  enumerable: true,
+  get: function () {
+    return _eeprom.AVREEPROM;
+  }
+});
+Object.defineProperty(exports, "EEPROMMemoryBackend", {
+  enumerable: true,
+  get: function () {
+    return _eeprom.EEPROMMemoryBackend;
+  }
+});
+Object.defineProperty(exports, "eepromConfig", {
+  enumerable: true,
+  get: function () {
+    return _eeprom.eepromConfig;
+  }
+});
+Object.defineProperty(exports, "spiConfig", {
+  enumerable: true,
+  get: function () {
+    return _spi.spiConfig;
+  }
+});
+Object.defineProperty(exports, "AVRSPI", {
+  enumerable: true,
+  get: function () {
+    return _spi.AVRSPI;
+  }
+});
+Object.defineProperty(exports, "AVRClock", {
+  enumerable: true,
+  get: function () {
+    return _clock.AVRClock;
+  }
+});
+Object.defineProperty(exports, "clockConfig", {
+  enumerable: true,
+  get: function () {
+    return _clock.clockConfig;
+  }
+});
+
+var _cpu = require("./cpu/cpu");
+
+var _instruction = require("./cpu/instruction");
+
+var _interrupt = require("./cpu/interrupt");
+
+var _timer = require("./peripherals/timer");
+
+var _gpio = require("./peripherals/gpio");
+
+var _usart = require("./peripherals/usart");
+
+var _eeprom = require("./peripherals/eeprom");
+
+var _twi = require("./peripherals/twi");
+
+Object.keys(_twi).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  if (Object.prototype.hasOwnProperty.call(_exportNames, key)) return;
+  if (key in exports && exports[key] === _twi[key]) return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function () {
+      return _twi[key];
+    }
+  });
+});
+
+var _spi = require("./peripherals/spi");
+
+var _clock = require("./peripherals/clock");
+},{"./cpu/cpu":"../../node_modules/avr8js/dist/esm/cpu/cpu.js","./cpu/instruction":"../../node_modules/avr8js/dist/esm/cpu/instruction.js","./cpu/interrupt":"../../node_modules/avr8js/dist/esm/cpu/interrupt.js","./peripherals/timer":"../../node_modules/avr8js/dist/esm/peripherals/timer.js","./peripherals/gpio":"../../node_modules/avr8js/dist/esm/peripherals/gpio.js","./peripherals/usart":"../../node_modules/avr8js/dist/esm/peripherals/usart.js","./peripherals/eeprom":"../../node_modules/avr8js/dist/esm/peripherals/eeprom.js","./peripherals/twi":"../../node_modules/avr8js/dist/esm/peripherals/twi.js","./peripherals/spi":"../../node_modules/avr8js/dist/esm/peripherals/spi.js","./peripherals/clock":"../../node_modules/avr8js/dist/esm/peripherals/clock.js"}],"intelhex.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.loadHex = loadHex;
+
+/**
+ * Minimal Intel HEX loader
+ * Part of AVR8js
+ *
+ * Copyright (C) 2019, Uri Shaked
+ */
+function loadHex(source, target) {
+  for (const line of source.split('\n')) {
+    if (line[0] === ':' && line.substr(7, 2) === '00') {
+      const bytes = parseInt(line.substr(1, 2), 16);
+      const addr = parseInt(line.substr(3, 4), 16);
+
+      for (let i = 0; i < bytes; i++) {
+        target[addr + i] = parseInt(line.substr(9 + i * 2, 2), 16);
+      }
+    }
+  }
+}
+},{}],"emulator.js":[function(require,module,exports) {
+"use strict";
+
+var avr8js = _interopRequireWildcard(require("avr8js"));
+
+var _intelhex = require("./intelhex");
+
+function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
+
+function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || typeof obj !== "object" && typeof obj !== "function") { return { default: obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj.default = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
+class Emulator {
+  constructor(leds, button) {
+    this.frameId;
+    this.cpu;
+    this.timer0;
+    this.portA;
+    this.portB;
+    this.portC;
+    this.portD;
+    this.cache;
+    this.program = new Uint16Array();
+    this.clockFrequency = 16000000;
+    this.flashSize = 32768;
+    this.leds = leds;
+    this.button = button;
+  }
+
+  loadGame(hex) {
+    const temp = new Uint8Array(this.flashSize / 2);
+    (0, _intelhex.loadHex)(hex, temp);
+    this.program = new Uint16Array(temp.buffer);
+    this.cpu = new avr8js.CPU(this.program);
+    this.timer0 = new avr8js.AVRTimer(this.cpu, avr8js.timer0Config);
+    this.usart = new avr8js.AVRUSART(this.cpu, avr8js.usart0Config, this.clockFrequency);
+    this.initPorts();
+    this.initSerialCommunication();
+    this.enableAnalogRead();
+  }
+
+  initPorts() {
+    this.portA = new avr8js.AVRIOPort(this.cpu, avr8js.portAConfig);
+    this.portB = new avr8js.AVRIOPort(this.cpu, avr8js.portBConfig);
+    this.portC = new avr8js.AVRIOPort(this.cpu, avr8js.portCConfig);
+    this.portD = new avr8js.AVRIOPort(this.cpu, avr8js.portDConfig);
+    this.button.state = avr8js.PinState.Low;
+    this.button.domElement.addEventListener('mousedown', () => this.buttonPressHandler());
+    this.button.domElement.addEventListener('mouseup', () => this.buttonReleaseHandler());
+    this.button.domElement.addEventListener('mouseleave', () => this.buttonReleaseHandler());
+    this.portA.addListener(() => {
+      this.ledHandler('portA');
+    });
+    this.portB.addListener(() => {
+      this.ledHandler('portB');
+    });
+    this.portC.addListener(() => {
+      this.ledHandler('portC');
+    });
+    this.portD.addListener(() => {
+      this.ledHandler('portD');
+    });
+  }
+
+  initSerialCommunication() {
+    this.cache = '';
+
+    this.usart.onByteTransmit = rawvalue => {
+      const value = String.fromCharCode(rawvalue);
+
+      if (value == '\n') {
+        console.log(this.cache);
+        this.cache = '';
+        return;
+      }
+
+      this.cache += value;
+    };
+  }
+
+  enableAnalogRead() {
+    //NOTE: AVR8JS is still working on a proper way to populate the registers used by analogRead
+    //https://github.com/wokwi/avr8js/issues/13
+    //The current code is the lowlevel solution the avr8js team came up with, it takes care of all invocations of analogRead()
+    //https://stackblitz.com/edit/avr8js-simon-game?file=execute.ts
+    // Simulate analog port (so that analogRead() eventually return)
+    this.cpu.writeHooks[0x7a] = value => {
+      if (value & 1 << 6) {
+        this.cpu.data[0x7a] = value & ~(1 << 6); // clear bit - conversion done
+        // random value
+
+        const analogValue = Math.floor(Math.random() * 1024);
+        this.cpu.data[0x78] = analogValue & 0xff;
+        this.cpu.data[0x79] = analogValue >> 8 & 0x3;
+        return true; // don't update
+      }
+    };
+  }
+
+  buttonPressHandler() {
+    this[this.button.avrPort].setPin(this.button.avrPin, avr8js.PinState.High);
+    this.button.state = avr8js.PinState.High;
+  }
+
+  buttonReleaseHandler() {
+    if (this[this.button.avrPort].pinState(this.button.avrPin) != avr8js.PinState.Low) {
+      this[this.button.avrPort].setPin(this.button.avrPin, avr8js.PinState.Low);
+      this.button.state = avr8js.PinState.Low;
+    }
+  }
+
+  ledHandler(port) {
+    const connectedLeds = this.leds.filter(led => {
+      return led.avrPort == port;
+    });
+
+    for (let led of connectedLeds) {
+      if (this[port].pinState(led.avrPin) === avr8js.PinState.High) {
+        led.domElement.classList.remove('off');
+        led.domElement.classList.add('on');
+        led.state = true;
+        continue;
+      }
+
+      led.domElement.classList.remove('on');
+      led.domElement.classList.add('off');
+      led.state = false;
+    }
+  }
+
+  executeGame() {
+    const deadline = this.cpu.cycles + this.clockFrequency / 60;
+
+    while (this.cpu.cycles <= deadline) {
+      avr8js.avrInstruction(this.cpu);
+      this.cpu.tick();
+    }
+
+    this.frameId = requestAnimationFrame(() => this.executeGame());
+  }
+
+  stopGame() {
+    cancelAnimationFrame(this.frameId);
+
+    for (let led of this.leds) {
+      if (led.state) {
+        led.domElement.classList.remove('on');
+        led.domElement.classList.add('off');
+        led.state = false;
+      }
+    }
+  }
+
+}
+
+window.Emulator = Emulator;
+},{"avr8js":"../../node_modules/avr8js/dist/esm/index.js","./intelhex":"intelhex.js"}],"../../node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+var global = arguments[3];
+var OVERLAY_ID = '__parcel__error__overlay__';
+var OldModule = module.bundle.Module;
+
+function Module(moduleName) {
+  OldModule.call(this, moduleName);
+  this.hot = {
+    data: module.bundle.hotData,
+    _acceptCallbacks: [],
+    _disposeCallbacks: [],
+    accept: function (fn) {
+      this._acceptCallbacks.push(fn || function () {});
+    },
+    dispose: function (fn) {
+      this._disposeCallbacks.push(fn);
+    }
+  };
+  module.bundle.hotData = null;
+}
+
+module.bundle.Module = Module;
+var checkedAssets, assetsToAccept;
+var parent = module.bundle.parent;
+
+if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
+  var hostname = "" || location.hostname;
+  var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "40121" + '/');
+
+  ws.onmessage = function (event) {
+    checkedAssets = {};
+    assetsToAccept = [];
+    var data = JSON.parse(event.data);
+
+    if (data.type === 'update') {
+      var handled = false;
+      data.assets.forEach(function (asset) {
+        if (!asset.isNew) {
+          var didAccept = hmrAcceptCheck(global.parcelRequire, asset.id);
+
+          if (didAccept) {
+            handled = true;
+          }
+        }
+      }); // Enable HMR for CSS by default.
+
+      handled = handled || data.assets.every(function (asset) {
+        return asset.type === 'css' && asset.generated.js;
+      });
+
+      if (handled) {
+        console.clear();
+        data.assets.forEach(function (asset) {
+          hmrApply(global.parcelRequire, asset);
+        });
+        assetsToAccept.forEach(function (v) {
+          hmrAcceptRun(v[0], v[1]);
+        });
+      } else if (location.reload) {
+        // `location` global exists in a web worker context but lacks `.reload()` function.
+        location.reload();
+      }
+    }
+
+    if (data.type === 'reload') {
+      ws.close();
+
+      ws.onclose = function () {
+        location.reload();
+      };
+    }
+
+    if (data.type === 'error-resolved') {
+      console.log('[parcel] ✨ Error resolved');
+      removeErrorOverlay();
+    }
+
+    if (data.type === 'error') {
+      console.error('[parcel] 🚨  ' + data.error.message + '\n' + data.error.stack);
+      removeErrorOverlay();
+      var overlay = createErrorOverlay(data);
+      document.body.appendChild(overlay);
+    }
+  };
+}
+
+function removeErrorOverlay() {
+  var overlay = document.getElementById(OVERLAY_ID);
+
+  if (overlay) {
+    overlay.remove();
+  }
+}
+
+function createErrorOverlay(data) {
+  var overlay = document.createElement('div');
+  overlay.id = OVERLAY_ID; // html encode message and stack trace
+
+  var message = document.createElement('div');
+  var stackTrace = document.createElement('pre');
+  message.innerText = data.error.message;
+  stackTrace.innerText = data.error.stack;
+  overlay.innerHTML = '<div style="background: black; font-size: 16px; color: white; position: fixed; height: 100%; width: 100%; top: 0px; left: 0px; padding: 30px; opacity: 0.85; font-family: Menlo, Consolas, monospace; z-index: 9999;">' + '<span style="background: red; padding: 2px 4px; border-radius: 2px;">ERROR</span>' + '<span style="top: 2px; margin-left: 5px; position: relative;">🚨</span>' + '<div style="font-size: 18px; font-weight: bold; margin-top: 20px;">' + message.innerHTML + '</div>' + '<pre>' + stackTrace.innerHTML + '</pre>' + '</div>';
+  return overlay;
+}
+
+function getParents(bundle, id) {
+  var modules = bundle.modules;
+
+  if (!modules) {
+    return [];
+  }
+
+  var parents = [];
+  var k, d, dep;
+
+  for (k in modules) {
+    for (d in modules[k][1]) {
+      dep = modules[k][1][d];
+
+      if (dep === id || Array.isArray(dep) && dep[dep.length - 1] === id) {
+        parents.push(k);
+      }
+    }
+  }
+
+  if (bundle.parent) {
+    parents = parents.concat(getParents(bundle.parent, id));
+  }
+
+  return parents;
+}
+
+function hmrApply(bundle, asset) {
+  var modules = bundle.modules;
+
+  if (!modules) {
+    return;
+  }
+
+  if (modules[asset.id] || !bundle.parent) {
+    var fn = new Function('require', 'module', 'exports', asset.generated.js);
+    asset.isNew = !modules[asset.id];
+    modules[asset.id] = [fn, asset.deps];
+  } else if (bundle.parent) {
+    hmrApply(bundle.parent, asset);
+  }
+}
+
+function hmrAcceptCheck(bundle, id) {
+  var modules = bundle.modules;
+
+  if (!modules) {
+    return;
+  }
+
+  if (!modules[id] && bundle.parent) {
+    return hmrAcceptCheck(bundle.parent, id);
+  }
+
+  if (checkedAssets[id]) {
+    return;
+  }
+
+  checkedAssets[id] = true;
+  var cached = bundle.cache[id];
+  assetsToAccept.push([bundle, id]);
+
+  if (cached && cached.hot && cached.hot._acceptCallbacks.length) {
+    return true;
+  }
+
+  return getParents(global.parcelRequire, id).some(function (id) {
+    return hmrAcceptCheck(global.parcelRequire, id);
+  });
+}
+
+function hmrAcceptRun(bundle, id) {
+  var cached = bundle.cache[id];
+  bundle.hotData = {};
+
+  if (cached) {
+    cached.hot.data = bundle.hotData;
+  }
+
+  if (cached && cached.hot && cached.hot._disposeCallbacks.length) {
+    cached.hot._disposeCallbacks.forEach(function (cb) {
+      cb(bundle.hotData);
+    });
+  }
+
+  delete bundle.cache[id];
+  bundle(id);
+  cached = bundle.cache[id];
+
+  if (cached && cached.hot && cached.hot._acceptCallbacks.length) {
+    cached.hot._acceptCallbacks.forEach(function (cb) {
+      cb();
+    });
+
+    return true;
+  }
+}
+},{}]},{},["../../node_modules/parcel-bundler/src/builtins/hmr-runtime.js","emulator.js"], null)
 //# sourceMappingURL=/emulator.js.map

@@ -30,6 +30,7 @@ class Emulator {
 
         this.initPorts();
         this.initSerialCommunication();
+        this.enableAnalogRead();
     }
 
     initPorts() {
@@ -71,6 +72,25 @@ class Emulator {
             }
 
             this.cache += value;
+        };
+    }
+
+    enableAnalogRead() {
+        //NOTE: AVR8JS is still working on a proper way to populate the registers used by analogRead
+        //https://github.com/wokwi/avr8js/issues/13
+        //The current code is the lowlevel solution the avr8js team came up with, it takes care of all invocations of analogRead()
+        //https://stackblitz.com/edit/avr8js-simon-game?file=execute.ts
+        
+        // Simulate analog port (so that analogRead() eventually return)
+        this.cpu.writeHooks[0x7a] = value => {
+            if (value & (1 << 6)) {
+            this.cpu.data[0x7a] = value & ~(1 << 6); // clear bit - conversion done
+            // random value
+            const analogValue = Math.floor(Math.random() * 1024);
+            this.cpu.data[0x78] = analogValue & 0xff;
+            this.cpu.data[0x79] = (analogValue >> 8) & 0x3;
+            return true; // don't update
+            }
         };
     }
 
