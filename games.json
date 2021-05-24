@@ -7,7 +7,7 @@
             "source": "#include &lt;TLOB.h&gt;\r\n\r\nTLOB tlob(3,2,4,5);\r\nString gameState = &quot;play&quot;;\r\n\r\nunsigned long time = 0;\r\n\r\nvoid setup() {\r\n  randomSeed(analogRead(0));\r\n}\r\n\r\nvoid loop() {\r\n  \r\n  \/\/ When the game is won, lights are \r\n  if (gameState == &quot;win&quot;){\r\n    if (tlob.buttonPressed()){\r\n      gameState = &quot;play&quot;;\r\n      tlob.stopAll();\r\n      tlob.ledAll(0);\r\n    }\r\n  }\r\n\r\n  \/\/whilst in play mode\r\n  if (gameState == &quot;play&quot;){\r\n\r\n    \/\/ when the button is pressed\r\n    if (tlob.buttonPressed()){\r\n      \/\/ if all leds are on\r\n      if (tlob.led(0) &amp;&amp; tlob.led(1) &amp;&amp; tlob.led(2)){\r\n        \/\/ blink all leds\r\n        tlob.blinkAll();\r\n        gameState = &quot;win&quot;;\r\n      } else {\r\n        \/\/loose\r\n        tlob.ledAll(0);\r\n        delay(500);\r\n      }\r\n    } else {\r\n      \/\/ if 100ms have passed\r\n      if (millis() - time &gt; 100){\r\n        \/\/ only if random lands on 0, 1 or 2 a led is changed.\r\n        int rand = random(5);\r\n        tlob.led(rand, !tlob.led(rand));\r\n        time = millis();\r\n      }\r\n    }\r\n  }\r\n\r\n  tlob.update();\r\n}\r\n",
             "path": {
                 "ino": "all-on_simple/all-on_simple.ino",
-                "hex": "all-on_simple_print/all-on_simple_print.hex"
+                "hex": "all-on_simple/all-on_simple.hex"
             }
         },
         { 
