@@ -33,11 +33,31 @@
         {
             "title": "Binary Sum",
             "author": "Daniel Simu",
-            "instructions": "Game design by Maarten",
+            "instructions": "Game design by Maarten. Two binary numbers are shown, add them to each other. Three possible anwers are shown, press the button when the correct one is displayed.",
             "source": "//TODO: Add source code.",
             "path": {
                 "ino": "binary_sum/binary_sum.ino",
                 "hex": "binary_sum/binary_sum.hex"
+            }
+        },
+        {
+            "title": "Race",
+            "author": "Daniel Simu",
+            "instructions": "Press about 60 times as fast as you can. Score is displayed in binary, best score is 7 worst is 0.",
+            "source": "//TODO: Add source code.",
+            "path": {
+                "ino": "race/race.ino",
+                "hex": "race/race.hex"
+            }
+        },
+        {
+            "title": "Roulette",
+            "author": "Daniel Simu",
+            "instructions": "Press to select the next led, hold down to confirm. A ball will start rolling, will it land on the led you selected?",
+            "source": "//TODO: Add source code.",
+            "path": {
+                "ino": "roulette_using_lib2/roulette_using_lib2.ino",
+                "hex": "roulette_using_lib2/roulette_using_lib2.hex"
             }
         }
     ]
