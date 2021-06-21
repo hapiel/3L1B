@@ -2,7 +2,7 @@
 class Roulette {
   public:
     
-  TLOB tlob = TLOB(3,2,4,5);
+  TLOB tlob = TLOB(2,3,4,5);
 
   String gameState = "finished";
 

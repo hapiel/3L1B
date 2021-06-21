@@ -1,6 +1,6 @@
 #include <TLOB.h>
 
-TLOB tlob(3,2,4,5);
+TLOB tlob(2,3,4,5);
 String gameState = "play";
 
 unsigned long time = 0;

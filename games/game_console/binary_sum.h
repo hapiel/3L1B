@@ -8,7 +8,7 @@
 class BinarySum {
   public:
 
-  TLOB tlob = TLOB(3,2,4,5);
+  TLOB tlob = TLOB(2,3,4,5);
 
   int num1;
   int num2;

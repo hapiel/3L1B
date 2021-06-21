@@ -1,19 +1,19 @@
 // init emulator
-let emulator 
+let emulator;
 
 window.addEventListener('DOMContentLoaded', () => {
   const leds = [
     {
-      pin: 3,
+      pin: 2,
       avrPort: 'portD',
-      avrPin: 3,
+      avrPin: 2,
       domElement: document.querySelector('#light-0'),
       state: false,
     },
     {
-      pin: 2,
+      pin: 3,
       avrPort: 'portD',
-      avrPin: 2,
+      avrPin: 3,
       domElement: document.querySelector('#light-1'),
       state: false,
     },
