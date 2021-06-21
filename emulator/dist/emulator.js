@@ -3245,6 +3245,17 @@ class Emulator {
     this.button.domElement.addEventListener('mousedown', () => this.buttonPressHandler());
     this.button.domElement.addEventListener('mouseup', () => this.buttonReleaseHandler());
     this.button.domElement.addEventListener('mouseleave', () => this.buttonReleaseHandler());
+    document.body.addEventListener("keydown", e =>{
+      if (e.key === " " ){
+          this.buttonPressHandler();
+      }
+  });
+  document.body.addEventListener("keyup", e =>{
+      if (e.key === " " ){
+          this.buttonReleaseHandler();
+      }
+  });
+
     this.portA.addListener(() => {
       this.ledHandler('portA');
     });
