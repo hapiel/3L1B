@@ -1,6 +1,6 @@
 #include <TLOB.h>
 
-TLOB tlob(3,2,4,5);
+TLOB tlob(2,3,4,5);
 
 String gameState = "finished";
 
@@ -15,7 +15,6 @@ int ballStopSpd = 1200;
 
 
 void setup() {
-  Serial.begin(9600);
 
   randomSeed(analogRead(0));
 
@@ -83,7 +82,7 @@ void loop() {
         ballSpd *= 1.1;
       }
     }
-    tlob.leds(ballPos, 1);
+    tlob.led(ballPos, 1);
       
   }
 

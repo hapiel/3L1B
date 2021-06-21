@@ -1,0 +1,11 @@
+,
+        {
+            "title": "Roulette",
+            "author": "Daniel Simu",
+            "instructions": "Press to select the next led, hold down to confirm. A ball will start rolling, will it land on the led you selected?",
+            "source": "//TODO: Add source code.",
+            "path": {
+                "ino": "roulette_using_lib2/roulette_using_lib2.ino",
+                "hex": "roulette_using_lib2/roulette_using_lib2.hex"
+            }
+        }

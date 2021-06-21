@@ -1,5 +1,43 @@
-// show and hide source
+// init emulator
+let emulator;
 
+window.addEventListener('DOMContentLoaded', () => {
+  const leds = [
+    {
+      pin: 2,
+      avrPort: 'portD',
+      avrPin: 2,
+      domElement: document.querySelector('#light-0'),
+      state: false,
+    },
+    {
+      pin: 3,
+      avrPort: 'portD',
+      avrPin: 3,
+      domElement: document.querySelector('#light-1'),
+      state: false,
+    },
+    {
+      pin: 4,
+      avrPort: 'portD',
+      avrPin: 4,
+      domElement: document.querySelector('#light-2'),
+      state: false,
+    }
+  ];
+
+  const button = {
+    pin: 5,
+    avrPort: 'portD',
+    avrPin: 5,
+    domElement: document.querySelector('#button'),
+    state: false,
+  }
+
+  emulator = new Emulator(leds, button); 
+})
+
+// show and hide source
 let showSource = false;
 
 document.querySelectorAll(".source-link").forEach(item => {
@@ -21,7 +59,6 @@ document.querySelectorAll(".source-link").forEach(item => {
 });
 
 // load game info
-
 const titleEl = document.getElementById("title");
 const authorEl = document.getElementById("author");
 const instructionsEl = document.getElementById("instructions");
@@ -41,31 +78,43 @@ fetch('games.json')
     // open the first game
     changeGame(0);
 
-    
-
     //create games list
     data.games.forEach((game, i) => {
       const li = document.createElement("li");
       const a = document.createElement("a");
       a.setAttribute("href", "#");
       a.setAttribute("onclick", "changeGame(" + i + ")");
-      console.log(i);
       const title = document.createTextNode(game.title);
       a.appendChild(title);
 
       li.appendChild(a);
       gameSelectionEl.append(li);
-      
+  
     });
   });
 
 // change the game
 function changeGame(id){
-  titleEl.innerHTML = gameData.games[id].title;
-  authorEl.innerHTML = gameData.games[id].author;
-  instructionsEl.innerHTML = gameData.games[id].instructions;
-  sourceEl.innerHTML = gameData.games[id].source;
+  const game = gameData.games[id];
+  titleEl.innerHTML = game.title;
+  authorEl.innerHTML = game.author;
+  instructionsEl.innerHTML = game.instructions;
+  sourceEl.innerHTML = game.source;
 
   // turn on code highlight
   hljs.highlightAll();
+
+  //stop running old game
+  emulator.stopGame();
+
+  if(game.path) {
+    executeGame(game);
+  }
+}
+
+async function executeGame(game) {
+  const res = await fetch(`games/${game.path.hex}`); 
+  const hex = await res.text();
+  emulator.loadGame(hex); 
+  emulator.executeGame(); 
 }

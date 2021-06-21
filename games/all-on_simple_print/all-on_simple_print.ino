@@ -1,19 +1,23 @@
 #include <TLOB.h>
 
-TLOB tlob(2,3,4,5);
+TLOB tlob(3,2,4,5);
 String gameState = "play";
 
 unsigned long time = 0;
 
 void setup() {
+  Serial.begin(9600);
+
   randomSeed(analogRead(0));
-  analogRead(0);
+  Serial.println("Randomseed set, game begins");
 }
 
 void loop() {
+  Serial.println("loop");
   
   // When the game is won, lights are 
   if (gameState == "win"){
+    Serial.println("WIN");
     if (tlob.buttonPressed()){
       gameState = "play";
       tlob.stopAll();
@@ -23,9 +27,11 @@ void loop() {
 
   //whilst in play mode
   if (gameState == "play"){
+    Serial.println("play");
 
     // when the button is pressed
     if (tlob.buttonPressed()){
+      Serial.println("BUTTON");
       // if all leds are on
       if (tlob.led(0) && tlob.led(1) && tlob.led(2)){
         // blink all leds

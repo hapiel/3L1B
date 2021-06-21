@@ -1,0 +1,36 @@
+{
+  "name": "source",
+  "version": "1.0.0",
+  "main": "main.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "http-server . -p 8080 -o /index.htm -c-1",
+    "dev-emulator": "parcel watch emulator/src/emulator.js -d emulator/dist",
+    "build-emulator": "parcel build emulator/src/emulator.js -d emulator/dist"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hapiel/3lights_js.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hapiel/3lights_js/issues"
+  },
+  "browserslist": [
+    "last 1 Chrome version"
+  ],
+  "homepage": "https://github.com/hapiel/3lights_js#readme",
+  "description": "",
+  "dependencies": {
+    "avr8js": "^0.15.0",
+    "http-server": "^0.12.3"
+  },
+  "devDependencies": {
+    "parcel-bundler": "^1.12.3"
+  }
+}

@@ -4,7 +4,7 @@
 // Once you've done 60 presses you will be shown the speed you scored.
 
 
-TLOB tlob(3,2,4,5);
+TLOB tlob(2,3,4,5);
 
 
 int presses = 0;

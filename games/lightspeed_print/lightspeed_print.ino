@@ -1,6 +1,6 @@
 #include <TLOB.h>
 
-TLOB TLOB(2,3,4,5);
+TLOB TLOB(3,2,4,5);
 
 // current position of the light
 int position = 0;
@@ -19,6 +19,8 @@ float incr = 0.8;
 float decr = 2.5;
 
 void setup() {
+  Serial.begin(9600);
+  Serial.println("setup");
 }
 
 void loop() {
@@ -37,6 +39,7 @@ void loop() {
 
 // switches to the next led if sufficient time has passed
 void nextLed(){
+   Serial.println("nextLed");
   // if more time has passed than speed
   if (millis() - lastTime > speed){
     // turn off current led
@@ -53,16 +56,18 @@ void nextLed(){
 void checkButton(){
   // if the button is pressed
   if ( TLOB.buttonPressed() ) {
-    // if the middle led is lit
+    Serial.println("buttonPressed");
     if ( position == 1 ) {
+      Serial.println("win!");
       // win! 
       // increase speed
       speed *= incr;
       //blink middle led at quarter of speed
       TLOB.blink(1, speed / 4);
 
-    // if position is not the middle led
+    // if button is not pressed
     } else {
+      Serial.println("loose!");
       // loose... 
       // decrease speed, but the lowest setting is minSpeed
       speed = min(speed * decr, minSpeed); 
@@ -78,6 +83,7 @@ void checkButton(){
 
 // wait, and then set the game back to playing mode
 void waitToPlay(){
+  Serial.println("waiting");
   // time waiting before going back to play is speed * 2 or at minimum 200ms
   int waitTime = max(speed * 2, 200);
   // if waitTime has passed since lastTime
@@ -88,5 +94,6 @@ void waitToPlay(){
     TLOB.ledAll(0);
     // change back to playing mode
     gameState = "playing";
+    Serial.println("continue game");
   }
 }
