@@ -2,6 +2,30 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inconsolata:wght@300;400;600&display=swap');
 
+html {
+  --scrollbarBG: #e6e6e6;
+  --thumbBG: #96c0c1;
+}
+
+
+*::-webkit-scrollbar {
+  width: 11px;
+}
+
+*{
+  scrollbar-width: thin;
+  scrollbar-color: var(--thumbBG) var(--scrollbarBG);
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--scrollbarBG);
+}
+*::-webkit-scrollbar-thumb {
+  background-color: var(--thumbBG) ;
+  border-radius: 6px;
+  border: 3px solid var(--scrollbarBG);
+}
+
 
 
 a{
@@ -73,26 +97,16 @@ h1, h2, h3 {
 }
 
 .game-info{
-  overflow-y: hidden;
+  overflow-y: auto;
   min-height: 40%;
-  margin-right: 16px;
-  scrollbar-width: thin;
+  padding-right: 1em;
 }
-  .game-info:hover {
-    overflow-y: auto;
-    margin-right: 0;
-  }
+
 
 .game-selection {
-  overflow-y: hidden;
+  overflow-y: auto;
   padding-right: 1em;
-  scrollbar-width: thin;
-  margin-right: 16px;
 }
-  .game-selection:hover{
-    overflow-y: auto;
-    margin-right: 0;
-  }
 
 
 .right-menu {
@@ -130,22 +144,34 @@ pre {
 
 .footer {
   grid-area: footer;
-  /* border: 2px solid red;
-  box-sizing: border-box; */
   margin-left: auto;
   align-self: end;
   font-size: 0.8rem;
 }
 
+.small-text {
+  font-size: 0.8rem;
+}
+
 .game {
   grid-area: game;
-  /* border: 2px solid red;
-  box-sizing: border-box; */
   position: absolute;
   left: 50%;
   top: 50%;
   transform: translate(-50%, -50%);
   text-align: center;
+}
+
+.about {
+  grid-area: game;
+  position: absolute;
+  left: 50%;
+  top: 5em;
+  transform: translate(-50%, 0);
+
+  background-color: #ffffffd4;
+  padding: 1em;
+  display: none;
 }
 
 .lights-container {

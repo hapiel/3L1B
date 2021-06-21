@@ -5,7 +5,7 @@ slug: /
 
 # Getting started
 
-Make sure to install the TLOB library by copying the [library files](https://github.com/hapiel/TLOB) to your Arduino library folder/TLOB
+Make sure to install the TLOB library by copying the [library files](https://github.com/hapiel/TLOB/releases) to your Arduino library folder/TLOB
 
 Connect 3 leds 1 button to your arduino, using a pull-down resistor on the button so that the pin reads high when the button is pressed.
 

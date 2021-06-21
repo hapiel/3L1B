@@ -118,3 +118,12 @@ async function executeGame(game) {
   emulator.loadGame(hex); 
   emulator.executeGame(); 
 }
+
+function toggleAbout() {
+  let about = document.getElementById("about");
+  if (about.style.display != "block") {
+    about.style.display = "block";
+  } else {
+    about.style.display = "none";
+  }
+} 
